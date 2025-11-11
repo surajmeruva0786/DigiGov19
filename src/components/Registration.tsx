@@ -26,6 +26,47 @@ export function Registration({ onNavigate, onComplete }: RegistrationProps) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [fullName, setFullName] = useState('');
+  const [aadhaar, setAadhaar] = useState('');
+  const [aadhaarPhoto, setAadhaarPhoto] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [stateVal, setStateVal] = useState('');
+  const [pincode, setPincode] = useState('');
+
+  async function completeRegistration() {
+    try {
+      const { registerUser } = await import('@/firebase');
+      if (!(password === confirmPassword && confirmPassword.length > 0)) {
+        console.error('[Registration] Passwords do not match');
+        return;
+      }
+      if (!email) {
+        console.error('[Registration] Email is required');
+        return;
+      }
+      const additionalData = {
+        fullName,
+        aadhaar,
+        aadhaarPhoto,
+        phone,
+        address,
+        state: stateVal,
+        pincode,
+        familyMembers,
+      };
+      const res = await registerUser(email, password, additionalData);
+      console.info('[Registration] registerUser result:', res);
+      if (res.success) {
+        onComplete();
+      } else {
+        console.error('[Registration] Failed:', res.message);
+      }
+    } catch (err) {
+      console.error('[Registration] Unexpected error:', err);
+    }
+  }
 
   const steps = [
     { number: 1, title: 'Personal Info', icon: User },
@@ -66,7 +107,7 @@ export function Registration({ onNavigate, onComplete }: RegistrationProps) {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     } else {
-      onComplete();
+      void completeRegistration();
     }
   };
 
@@ -184,6 +225,8 @@ export function Registration({ onNavigate, onComplete }: RegistrationProps) {
                       <Input
                         id="fullName"
                         placeholder="Enter your full name"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
                         className="bg-white/50 border-gray-200/50 focus:bg-white transition-all"
                         required
                       />
@@ -199,6 +242,8 @@ export function Registration({ onNavigate, onComplete }: RegistrationProps) {
                         id="aadhaar"
                         placeholder="XXXX XXXX XXXX"
                         maxLength={14}
+                        value={aadhaar}
+                        onChange={(e) => setAadhaar(e.target.value)}
                         className="bg-white/50 border-gray-200/50 focus:bg-white transition-all"
                         required
                       />
@@ -215,6 +260,8 @@ export function Registration({ onNavigate, onComplete }: RegistrationProps) {
                           id="aadhaarPhoto"
                           type="url"
                           placeholder="https://drive.google.com/file/d/..."
+                          value={aadhaarPhoto}
+                          onChange={(e) => setAadhaarPhoto(e.target.value)}
                           className="bg-white/50 border-gray-200/50 focus:bg-white transition-all"
                         />
                       </div>
@@ -244,6 +291,8 @@ export function Registration({ onNavigate, onComplete }: RegistrationProps) {
                             id="phone"
                             placeholder="XXXXXXXXXX"
                             maxLength={10}
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
                             className="bg-white/50 border-gray-200/50 focus:bg-white transition-all flex-1"
                             required
                           />
@@ -260,6 +309,8 @@ export function Registration({ onNavigate, onComplete }: RegistrationProps) {
                           id="email"
                           type="email"
                           placeholder="your.email@example.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
                           className="bg-white/50 border-gray-200/50 focus:bg-white transition-all"
                           required
                         />
@@ -341,6 +392,8 @@ export function Registration({ onNavigate, onComplete }: RegistrationProps) {
                         id="address"
                         placeholder="Enter your complete address"
                         rows={3}
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
                         className="bg-white/50 border-gray-200/50 focus:bg-white transition-all"
                         required
                       />
@@ -353,7 +406,7 @@ export function Registration({ onNavigate, onComplete }: RegistrationProps) {
                         transition={{ delay: 0.2 }}
                       >
                         <Label htmlFor="state">State <span className="text-red-500">*</span></Label>
-                        <Select>
+                        <Select value={stateVal} onValueChange={(v) => setStateVal(v)}>
                           <SelectTrigger className="bg-white/50 border-gray-200/50">
                             <SelectValue placeholder="Select your state" />
                           </SelectTrigger>
@@ -376,6 +429,8 @@ export function Registration({ onNavigate, onComplete }: RegistrationProps) {
                           id="pincode"
                           placeholder="XXXXXX"
                           maxLength={6}
+                          value={pincode}
+                          onChange={(e) => setPincode(e.target.value)}
                           className="bg-white/50 border-gray-200/50 focus:bg-white transition-all"
                           required
                         />

@@ -15,10 +15,25 @@ interface LoginProps {
 
 export function Login({ onLogin, onNavigate }: LoginProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin();
+    void (async () => {
+      try {
+        const { loginUser } = await import('@/firebase');
+        const res = await loginUser(email, password);
+        console.info('[Login] loginUser result:', res);
+        if (res.success) {
+          onLogin();
+        } else {
+          console.error('[Login] Failed:', res.message);
+        }
+      } catch (err) {
+        console.error('[Login] Unexpected error:', err);
+      }
+    })();
   };
 
   const features = [
@@ -108,6 +123,8 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
                         id="loginEmail"
                         type="email"
                         placeholder="your.email@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         className="pl-10 bg-white/50 border-gray-200/50 focus:bg-white transition-all"
                         required
                       />
@@ -127,6 +144,8 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
                         id="loginPassword"
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         className="pl-10 pr-10 bg-white/50 border-gray-200/50 focus:bg-white transition-all"
                         required
                       />
