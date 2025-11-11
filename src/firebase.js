@@ -28,12 +28,13 @@ import {
 // Firebase initialization (placeholders - replace with real values via env/config)
 // --------------------------------------------------------------------------------
 const firebaseConfig = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_AUTH_DOMAIN',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_STORAGE_BUCKET',
-  messagingSenderId: 'YOUR_SENDER_ID',
-  appId: 'YOUR_APP_ID',
+  apiKey: "AIzaSyDb5KCyZI4gxaPqx4DZQQfxlGbU7YSspbo",
+  authDomain: "digigov19.firebaseapp.com",
+  projectId: "digigov19",
+  storageBucket: "digigov19.firebasestorage.app",
+  messagingSenderId: "690080012169",
+  appId: "1:690080012169:web:7108e44a0fd31541c5f358",
+  measurementId: "G-XTLL085NQC"
 };
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
