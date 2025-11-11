@@ -41,6 +41,45 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+ // Basic console log to identify Firebase initialization in the browser
+ try {
+   // This indicates client-side SDK is initialized with a project
+   // It does not guarantee Firestore rules will allow access.
+   // A deeper connectivity probe follows below.
+   // eslint-disable-next-line no-console
+   console.info('[Firebase] Initialized. Project:', app.options?.projectId || '(unknown)');
+ } catch (e) {
+   // eslint-disable-next-line no-console
+   console.error('[Firebase] Initialization log failed:', e);
+ }
+ 
+ // Connectivity check helper: attempts a read to gauge Firestore reachability.
+ async function logFirebaseConnectivity() {
+   try {
+     // Read a dummy doc; it may not exist. Success means Firestore is reachable.
+     // If rules deny access, you'll see a permission error which we surface.
+     await getDoc(doc(db, '__health', '__ping'));
+     // eslint-disable-next-line no-console
+     console.info('[Firebase] Firestore reachable (read attempted).');
+   } catch (err) {
+     // eslint-disable-next-line no-console
+     console.error('[Firebase] Firestore not reachable:', parseFirebaseError(err));
+   }
+ }
+ // Kick off connectivity probe (non-blocking)
+ // No top-level await; this runs in background.
+ void logFirebaseConnectivity();
+ 
+ // Public helper for on-demand connectivity checks
+ export async function checkFirebaseConnection() {
+   try {
+     await getDoc(doc(db, '__health', '__ping'));
+     return buildResponse(true, 'Firestore reachable', null);
+   } catch (error) {
+     return buildResponse(false, parseFirebaseError(error), null);
+   }
+ }
+ 
 // --------------------------------------------------------------------------------
 // Helpers
 // --------------------------------------------------------------------------------
