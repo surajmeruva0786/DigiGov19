@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Lock, Mail, Eye, EyeOff, Shield, Sparkles, Check, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -29,6 +30,7 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
           onLogin();
         } else {
           console.error('[Login] Failed:', res.message);
+          toast.error('Invalid credentials. Please check your email and password.');
         }
       } catch (err) {
         console.error('[Login] Unexpected error:', err);
