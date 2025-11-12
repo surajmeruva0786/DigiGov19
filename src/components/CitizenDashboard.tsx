@@ -40,7 +40,7 @@ interface CitizenDashboardProps {
   onToggleChatbot: () => void;
 }
 
-export function CitizenDashboard({ onNavigate, userName, onLogout }: CitizenDashboardProps) {
+export function CitizenDashboard({ onNavigate, userName, onLogout, isChatbotOpen, onToggleChatbot }: CitizenDashboardProps) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState([
     {
