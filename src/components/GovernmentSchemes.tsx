@@ -31,7 +31,7 @@ import {
 } from './ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { allGovernmentSchemes, indianStates } from '../data/schemes';
 
 interface GovernmentSchemesProps {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageSquareText, X, Send, Paperclip, Mic } from 'lucide-react';
+import { X, Send, Paperclip, Mic } from 'lucide-react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -22,22 +22,6 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
 
   return (
     <>
-      {/* Chatbot Toggle Button */}
-      <motion.div
-        className="fixed bottom-6 right-6 z-50"
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <Button
-          size="icon"
-          className="w-14 h-14 rounded-full shadow-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
-          onClick={onToggle}
-        >
-          <MessageSquareText className="w-7 h-7" />
-        </Button>
-      </motion.div>
-
       {/* Chatbot Window */}
       <AnimatePresence>
         {isOpen && (

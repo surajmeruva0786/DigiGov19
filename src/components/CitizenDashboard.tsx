@@ -30,17 +30,15 @@ import {
   SelectValue,
 } from './ui/select';
 import { NotificationsPanel } from './NotificationsPanel';
-import { ChatbotWidget } from './ChatbotWidget';
 
 interface CitizenDashboardProps {
   onNavigate: (page: string) => void;
   userName: string;
   onLogout: () => void;
-  isChatbotOpen: boolean;
   onToggleChatbot: () => void;
 }
 
-export function CitizenDashboard({ onNavigate, userName, onLogout, isChatbotOpen, onToggleChatbot }: CitizenDashboardProps) {
+export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatbot }: CitizenDashboardProps) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState([
     {
@@ -400,8 +398,6 @@ export function CitizenDashboard({ onNavigate, userName, onLogout, isChatbotOpen
         onMarkAllAsRead={handleMarkAllAsRead}
         onDelete={handleDeleteNotification}
       />
-
-      <ChatbotWidget isOpen={isChatbotOpen} onToggle={onToggleChatbot} />
     </div>
   );
 }
