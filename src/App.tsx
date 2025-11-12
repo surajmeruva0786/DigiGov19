@@ -198,6 +198,8 @@ export default function App() {
               onNavigate={handleNavigate}
               userName={userName}
               onLogout={handleLogout}
+              isChatbotOpen={isChatbotOpen}
+              onToggleChatbot={() => setIsChatbotOpen(!isChatbotOpen)}
             />
           </PageTransition>
         );
@@ -403,9 +405,7 @@ export default function App() {
         )}
         <Toaster />
       </div>
-      <div style={{ zIndex: 9999 }}>
-        <ChatbotWidget isOpen={isChatbotOpen} onToggle={() => setIsChatbotOpen(!isChatbotOpen)} />
-      </div>
+      <Toaster />
     </>
   );
 }

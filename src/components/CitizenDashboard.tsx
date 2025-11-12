@@ -16,6 +16,7 @@ import {
   Mic,
   BarChart3,
   Globe,
+  MessageSquareText,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -29,11 +30,14 @@ import {
   SelectValue,
 } from './ui/select';
 import { NotificationsPanel } from './NotificationsPanel';
+import { ChatbotWidget } from './ChatbotWidget';
 
 interface CitizenDashboardProps {
   onNavigate: (page: string) => void;
   userName: string;
   onLogout: () => void;
+  isChatbotOpen: boolean;
+  onToggleChatbot: () => void;
 }
 
 export function CitizenDashboard({ onNavigate, userName, onLogout }: CitizenDashboardProps) {
@@ -206,6 +210,17 @@ export function CitizenDashboard({ onNavigate, userName, onLogout }: CitizenDash
                   <SelectItem value="bn">বাংলা</SelectItem>
                 </SelectContent>
               </Select>
+
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="relative hover:bg-white/50"
+                  onClick={onToggleChatbot}
+                >
+                  <MessageSquareText className="w-5 h-5" />
+                </Button>
+              </motion.div>
 
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                 <Button 
@@ -385,6 +400,8 @@ export function CitizenDashboard({ onNavigate, userName, onLogout }: CitizenDash
         onMarkAllAsRead={handleMarkAllAsRead}
         onDelete={handleDeleteNotification}
       />
+
+      <ChatbotWidget isOpen={isChatbotOpen} onToggle={onToggleChatbot} />
     </div>
   );
 }
