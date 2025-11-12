@@ -32,6 +32,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { toast } from 'sonner@2.0.3';
+import { allGovernmentSchemes, indianStates } from '../data/schemes';
 
 interface GovernmentSchemesProps {
   onNavigate: (page: string) => void;
@@ -57,125 +58,7 @@ export function GovernmentSchemes({ onNavigate }: GovernmentSchemesProps) {
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [selectedScheme, setSelectedScheme] = useState<Scheme | null>(null);
 
-  const schemes: Scheme[] = [
-    {
-      id: '1',
-      name: 'Ayushman Bharat - Pradhan Mantri Jan Arogya Yojana',
-      type: 'Healthcare',
-      description: 'Health protection cover of ₹5 lakhs per family per year for secondary and tertiary care hospitalization across public and private empanelled hospitals.',
-      benefits: [
-        'Free health coverage up to ₹5 lakhs',
-        'Cashless treatment at empanelled hospitals',
-        'Coverage for pre and post-hospitalization',
-        'No cap on family size and age',
-      ],
-      eligibility: [
-        'Families identified as per SECC 2011',
-        'Income below poverty line',
-        'No age limit',
-        'Pre-existing diseases covered from day one',
-      ],
-      state: 'All India',
-    },
-    {
-      id: '2',
-      name: 'National Scholarship Portal',
-      type: 'Education',
-      description: 'A one-stop solution through which various services starting from student application, application receipt, processing, sanction and disbursal of various scholarships to students.',
-      benefits: [
-        'Financial assistance for education',
-        'Multiple scholarship schemes',
-        'Direct benefit transfer',
-        'Covers school to post-graduation',
-      ],
-      eligibility: [
-        'Students from economically weaker sections',
-        'Minimum 50% marks in previous examination',
-        'Family income less than ₹2.5 lakhs per annum',
-        'Indian citizen',
-      ],
-      status: 'Applied',
-      state: 'All India',
-    },
-    {
-      id: '3',
-      name: 'Pradhan Mantri Kisan Samman Nidhi',
-      type: 'Financial',
-      description: 'Income support to all farmer families across the country, providing ₹6000 per year in three equal installments directly into bank accounts.',
-      benefits: [
-        '₹6000 per year direct benefit transfer',
-        'Three installments of ₹2000 each',
-        'No processing charges',
-        'Immediate transfer to bank account',
-      ],
-      eligibility: [
-        'All landholding farmers',
-        'Valid Aadhaar card',
-        'Bank account linked with Aadhaar',
-        'Land ownership documents',
-      ],
-      status: 'Approved',
-      state: 'All India',
-    },
-    {
-      id: '4',
-      name: 'Pradhan Mantri Matru Vandana Yojana',
-      type: 'Healthcare',
-      description: 'Cash incentive of ₹5000 in three installments to pregnant and lactating mothers for the first living child to improve health and nutrition status.',
-      benefits: [
-        '₹5000 cash incentive',
-        'Three installment payments',
-        'Nutrition support',
-        'Health check-up coverage',
-      ],
-      eligibility: [
-        'Pregnant women and lactating mothers',
-        'First living child of the family',
-        'Age 19 years or above',
-        'Registered with Anganwadi',
-      ],
-      state: 'All India',
-    },
-    {
-      id: '5',
-      name: 'Digital India Scholarship',
-      type: 'Education',
-      description: 'Scholarship program for students pursuing technical courses in fields of IT, Electronics, and Computer Science to promote digital literacy.',
-      benefits: [
-        'Up to ₹50,000 annual scholarship',
-        'Laptop/tablet allowance',
-        'Internet connectivity support',
-        'Skill development courses',
-      ],
-      eligibility: [
-        'Enrolled in recognized technical institution',
-        'Family income less than ₹3 lakhs',
-        'Minimum 60% marks',
-        'Age between 18-25 years',
-      ],
-      status: 'Pending',
-      state: 'Maharashtra',
-    },
-    {
-      id: '6',
-      name: 'Stand Up India Scheme',
-      type: 'Financial',
-      description: 'Facilitate bank loans between ₹10 lakh and ₹1 crore to at least one SC or ST borrower and at least one woman borrower per bank branch.',
-      benefits: [
-        'Loans from ₹10 lakh to ₹1 crore',
-        'Lower interest rates',
-        'Composite loan for new enterprises',
-        'Handholding support',
-      ],
-      eligibility: [
-        'SC/ST and/or Women entrepreneurs',
-        'Age above 18 years',
-        'For greenfield projects',
-        'Non-farm sector enterprises',
-      ],
-      state: 'All India',
-    },
-  ];
+  const schemes: Scheme[] = allGovernmentSchemes;
 
   const toggleExpanded = (schemeId: string) => {
     const newExpanded = new Set(expandedSchemes);
@@ -218,9 +101,11 @@ export function GovernmentSchemes({ onNavigate }: GovernmentSchemesProps) {
   const filteredSchemes = schemes.filter((scheme) => {
     const matchesSearch = scheme.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          scheme.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesState = stateFilter === 'all' || scheme.state === 'All India';
+    const matchesState = stateFilter === 'all' || scheme.state === stateFilter || scheme.state === 'All India';
     return matchesSearch && matchesState;
   });
+
+  const displayState = stateFilter === 'all' ? 'All India' : stateFilter;
 
   const handleSubmitComplaint = () => {
     if (complaint.trim()) {
@@ -263,7 +148,7 @@ export function GovernmentSchemes({ onNavigate }: GovernmentSchemesProps) {
             </Button>
             <div className="flex items-center gap-2 px-4 py-2 glass-card rounded-xl">
               <MapPin className="w-4 h-4 text-blue-600" />
-              <span className="text-sm">Maharashtra</span>
+              <span className="text-sm">{displayState}</span>
             </div>
           </div>
           <h1 className="gradient-text text-4xl">Government Schemes</h1>
@@ -309,7 +194,11 @@ export function GovernmentSchemes({ onNavigate }: GovernmentSchemesProps) {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All States</SelectItem>
-                      <SelectItem value="my-state">My State</SelectItem>
+                      {indianStates.map((state) => (
+                        <SelectItem key={state} value={state}>
+                          {state}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
