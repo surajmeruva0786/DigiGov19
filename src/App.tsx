@@ -28,6 +28,7 @@ import { OfficialAnalytics } from './components/OfficialAnalytics';
 import { OfficialForgotPassword } from './components/OfficialForgotPassword';
 import { LoadingScreen, TransitionLoader } from './components/LoadingScreen';
 import { PageTransition } from './components/PageTransition';
+import { ChatbotWidget } from './components/ChatbotWidget';
 
 type Page = 
   | 'home'
@@ -64,6 +65,7 @@ export default function App() {
   const userName = 'John Doe';
   const [officialName, setOfficialName] = useState('');
   const [officialDepartment, setOfficialDepartment] = useState('');
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   
   // Loading states
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -398,6 +400,7 @@ export default function App() {
       {showVoiceSetup && (
         <VoiceSetup onEnable={handleVoiceEnable} onSkip={handleVoiceSkip} />
       )}
+      <ChatbotWidget isOpen={isChatbotOpen} onToggle={() => setIsChatbotOpen(!isChatbotOpen)} />
       <Toaster />
     </div>
   );
