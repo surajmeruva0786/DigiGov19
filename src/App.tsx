@@ -400,7 +400,9 @@ export default function App() {
       {showVoiceSetup && (
         <VoiceSetup onEnable={handleVoiceEnable} onSkip={handleVoiceSkip} />
       )}
-      <ChatbotWidget isOpen={isChatbotOpen} onToggle={() => setIsChatbotOpen(!isChatbotOpen)} />
+      <div style={{ zIndex: 9999 }}>
+        <ChatbotWidget isOpen={isChatbotOpen} onToggle={() => setIsChatbotOpen(!isChatbotOpen)} />
+      </div>
       <Toaster />
     </div>
   );
