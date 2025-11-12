@@ -386,24 +386,26 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen light">
-      <AnimatePresence mode="wait">
-        {isTransitioning && (
-          <TransitionLoader message={transitionMessage} />
+    <>
+      <div className="min-h-screen light">
+        <AnimatePresence mode="wait">
+          {isTransitioning && (
+            <TransitionLoader message={transitionMessage} />
+          )}
+        </AnimatePresence>
+        
+        <AnimatePresence mode="wait">
+          {renderPage()}
+        </AnimatePresence>
+        
+        {showVoiceSetup && (
+          <VoiceSetup onEnable={handleVoiceEnable} onSkip={handleVoiceSkip} />
         )}
-      </AnimatePresence>
-      
-      <AnimatePresence mode="wait">
-        {renderPage()}
-      </AnimatePresence>
-      
-      {showVoiceSetup && (
-        <VoiceSetup onEnable={handleVoiceEnable} onSkip={handleVoiceSkip} />
-      )}
+        <Toaster />
+      </div>
       <div style={{ zIndex: 9999 }}>
         <ChatbotWidget isOpen={isChatbotOpen} onToggle={() => setIsChatbotOpen(!isChatbotOpen)} />
       </div>
-      <Toaster />
-    </div>
+    </>
   );
 }
