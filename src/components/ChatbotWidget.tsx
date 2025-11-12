@@ -26,7 +26,7 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="fixed bottom-24 right-6 z-50 w-80 h-[400px] flex flex-col"
+            className="fixed bottom-24 right-6 z-[999] w-80 h-[400px] flex flex-col"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}

@@ -405,7 +405,6 @@ export default function App() {
         <Toaster />
       </div>
       {isAuthenticated && <ChatbotWidget isOpen={isChatbotOpen} onToggle={() => setIsChatbotOpen(!isChatbotOpen)} />}
-      <Toaster />
     </>
   );
 }
