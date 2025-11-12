@@ -8,6 +8,14 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
 import { AnimatedBackground, FloatingParticles } from './AnimatedBackground';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog';
 
 interface LoginProps {
   onLogin: () => void;
@@ -18,6 +26,8 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState(false);
+  const [isAlertOpen, setAlertOpen] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +40,8 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
           onLogin();
         } else {
           console.error('[Login] Failed:', res.message);
-          toast.error('Invalid credentials. Please check your email and password.');
+          setError(true);
+          setAlertOpen(true);
         }
       } catch (err) {
         console.error('[Login] Unexpected error:', err);
@@ -127,7 +138,7 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
                         placeholder="your.email@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10 bg-white/50 border-gray-200/50 focus:bg-white transition-all"
+                        className={`pl-10 bg-white/50 border-gray-200/50 focus:bg-white transition-all ${error ? 'border-red-500 focus:border-red-500' : ''}`}
                         required
                       />
                     </div>
@@ -148,7 +159,7 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
                         placeholder="Enter your password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10 pr-10 bg-white/50 border-gray-200/50 focus:bg-white transition-all"
+                        className={`pl-10 pr-10 bg-white/50 border-gray-200/50 focus:bg-white transition-all ${error ? 'border-red-500 focus:border-red-500' : ''}`}
                         required
                       />
                       <motion.button
@@ -295,6 +306,25 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
           </motion.div>
         </div>
       </div>
+
+      <AlertDialog open={isAlertOpen} onOpenChange={setAlertOpen}>
+        <AlertDialogContent className="max-w-sm rounded-lg shadow-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-600 flex items-center justify-center gap-2">
+              <Lock className="w-5 h-5" /> Login Failed
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-gray-700">
+              Invalid credentials. Please check your email and password and try again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogAction 
+            onClick={() => setAlertOpen(false)} 
+            className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+          >
+            Try Again
+          </AlertDialogAction>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
