@@ -20,6 +20,7 @@ import {
   Baby,
   Home,
   Briefcase,
+  MessageSquareText,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -31,6 +32,7 @@ import { Progress } from './ui/progress';
 
 interface ApplicationsProps {
   onNavigate: (page: string) => void;
+  onToggleChatbot?: () => void;
 }
 
 interface Application {
@@ -58,7 +60,7 @@ interface Application {
   remarks?: string;
 }
 
-export function Applications({ onNavigate }: ApplicationsProps) {
+export function Applications({ onNavigate, onToggleChatbot }: ApplicationsProps) {
   const [expandedApplication, setExpandedApplication] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -238,14 +240,28 @@ export function Applications({ onNavigate }: ApplicationsProps) {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Button
-            variant="ghost"
-            onClick={() => onNavigate('dashboard')}
-            className="hover:bg-white/50 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => onNavigate('dashboard')}
+              className="hover:bg-white/50"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+            {onToggleChatbot && (
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="relative hover:bg-white/50"
+                  onClick={onToggleChatbot}
+                >
+                  <MessageSquareText className="w-5 h-5" />
+                </Button>
+              </motion.div>
+            )}
+          </div>
           <h1 className="gradient-text text-4xl">My Applications</h1>
           <p className="text-gray-600 mt-2">Track and manage all your government scheme applications</p>
         </motion.div>

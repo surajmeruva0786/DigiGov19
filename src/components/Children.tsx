@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Plus, Mic, Flame, Calendar, Eye } from 'lucide-react';
+import { ArrowLeft, Plus, Mic, Flame, Calendar, Eye, MessageSquareText } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -18,9 +18,10 @@ interface Child {
 
 interface ChildrenProps {
   onNavigate: (page: string, childId?: string) => void;
+  onToggleChatbot?: () => void;
 }
 
-export function Children({ onNavigate }: ChildrenProps) {
+export function Children({ onNavigate, onToggleChatbot }: ChildrenProps) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [children, setChildren] = useState<Child[]>([
     {
@@ -95,13 +96,27 @@ export function Children({ onNavigate }: ChildrenProps) {
             <h1 className="gradient-text text-4xl">Children</h1>
           </div>
           
-          <Button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Add Child
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Add Child
+            </Button>
+            {onToggleChatbot && (
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="relative hover:bg-white/50"
+                  onClick={onToggleChatbot}
+                >
+                  <MessageSquareText className="w-5 h-5" />
+                </Button>
+              </motion.div>
+            )}
+          </div>
         </motion.div>
 
         {/* Add Child Form */}

@@ -23,6 +23,7 @@ import {
   ChevronUp,
   Calendar,
   FileText,
+  MessageSquareText,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -35,6 +36,7 @@ import { Separator } from './ui/separator';
 
 interface ComplaintsProps {
   onNavigate: (page: string) => void;
+  onToggleChatbot?: () => void;
 }
 
 interface Department {
@@ -60,7 +62,7 @@ interface Complaint {
   }>;
 }
 
-export function Complaints({ onNavigate }: ComplaintsProps) {
+export function Complaints({ onNavigate, onToggleChatbot }: ComplaintsProps) {
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
@@ -188,14 +190,28 @@ export function Complaints({ onNavigate }: ComplaintsProps) {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Button
-            variant="ghost"
-            onClick={() => onNavigate('dashboard')}
-            className="hover:bg-white/50 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => onNavigate('dashboard')}
+              className="hover:bg-white/50"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            {onToggleChatbot && (
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="relative hover:bg-white/50"
+                  onClick={onToggleChatbot}
+                >
+                  <MessageSquareText className="w-5 h-5" />
+                </Button>
+              </motion.div>
+            )}
+          </div>
           <h1 className="gradient-text text-4xl">File a Complaint</h1>
           <p className="text-gray-600 mt-2">Select a department and submit your complaint</p>
         </motion.div>

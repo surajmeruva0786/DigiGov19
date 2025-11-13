@@ -13,6 +13,7 @@ import {
   IndianRupee,
   Calendar,
   Filter,
+  MessageSquareText,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -45,6 +46,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from './ui/input-otp';
 
 interface BillPaymentsProps {
   onNavigate: (page: string) => void;
+  onToggleChatbot?: () => void;
 }
 
 interface BillType {
@@ -72,7 +74,7 @@ interface UPIApp {
   color: string;
 }
 
-export function BillPayments({ onNavigate }: BillPaymentsProps) {
+export function BillPayments({ onNavigate, onToggleChatbot }: BillPaymentsProps) {
   const [selectedBill, setSelectedBill] = useState<BillType | null>(null);
   const [consumerNumber, setConsumerNumber] = useState('');
   const [amount, setAmount] = useState('');
@@ -215,14 +217,28 @@ export function BillPayments({ onNavigate }: BillPaymentsProps) {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Button
-            variant="ghost"
-            onClick={() => onNavigate('dashboard')}
-            className="hover:bg-white/50 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => onNavigate('dashboard')}
+              className="hover:bg-white/50"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            {onToggleChatbot && (
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="relative hover:bg-white/50"
+                  onClick={onToggleChatbot}
+                >
+                  <MessageSquareText className="w-5 h-5" />
+                </Button>
+              </motion.div>
+            )}
+          </div>
           <h1 className="gradient-text text-4xl">Bill Payments</h1>
           <p className="text-gray-600 mt-2">Pay your utility bills online</p>
         </motion.div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { ArrowLeft, Droplet, Heart, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Droplet, Heart, AlertCircle, MessageSquareText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -15,9 +15,10 @@ import { toast } from 'sonner@2.0.3';
 interface HealthServicesProps {
   userName?: string;
   onNavigate?: (page: string) => void;
+  onToggleChatbot?: () => void;
 }
 
-export function HealthServices({ userName = 'Rajesh Kumar', onNavigate }: HealthServicesProps) {
+export function HealthServices({ userName = 'Rajesh Kumar', onNavigate, onToggleChatbot }: HealthServicesProps) {
   const [showDonorModal, setShowDonorModal] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [donorType, setDonorType] = useState<'blood' | 'organ'>('blood');
@@ -104,21 +105,35 @@ export function HealthServices({ userName = 'Rajesh Kumar', onNavigate }: Health
       {/* Header */}
       <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            {onNavigate && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onNavigate('dashboard')}
-                className="hover:bg-gray-100"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-            )}
-            <div>
-              <h1 className="text-gray-900">🏥 Health Services</h1>
-              <p className="text-sm text-gray-600">Blood & Organ Donation Services</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {onNavigate && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onNavigate('dashboard')}
+                  className="hover:bg-gray-100"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+              )}
+              <div>
+                <h1 className="text-gray-900">🏥 Health Services</h1>
+                <p className="text-sm text-gray-600">Blood & Organ Donation Services</p>
+              </div>
             </div>
+            {onToggleChatbot && (
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="relative hover:bg-white/50"
+                  onClick={onToggleChatbot}
+                >
+                  <MessageSquareText className="w-5 h-5" />
+                </Button>
+              </motion.div>
+            )}
           </div>
         </div>
       </div>

@@ -15,6 +15,7 @@ import {
   Send,
   Upload,
   FileText,
+  MessageSquareText,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -36,6 +37,7 @@ import { allGovernmentSchemes, indianStates } from '../data/schemes';
 
 interface GovernmentSchemesProps {
   onNavigate: (page: string) => void;
+  onToggleChatbot?: () => void;
 }
 
 interface Scheme {
@@ -49,7 +51,7 @@ interface Scheme {
   state: string;
 }
 
-export function GovernmentSchemes({ onNavigate }: GovernmentSchemesProps) {
+export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSchemesProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [stateFilter, setStateFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
@@ -146,9 +148,23 @@ export function GovernmentSchemes({ onNavigate }: GovernmentSchemesProps) {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
-            <div className="flex items-center gap-2 px-4 py-2 glass-card rounded-xl">
-              <MapPin className="w-4 h-4 text-blue-600" />
-              <span className="text-sm">{displayState}</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-4 py-2 glass-card rounded-xl">
+                <MapPin className="w-4 h-4 text-blue-600" />
+                <span className="text-sm">{displayState}</span>
+              </div>
+              {onToggleChatbot && (
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="relative hover:bg-white/50"
+                    onClick={onToggleChatbot}
+                  >
+                    <MessageSquareText className="w-5 h-5" />
+                  </Button>
+                </motion.div>
+              )}
             </div>
           </div>
           <h1 className="gradient-text text-4xl">Government Schemes</h1>

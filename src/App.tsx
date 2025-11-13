@@ -66,6 +66,7 @@ export default function App() {
   const [officialName, setOfficialName] = useState('');
   const [officialDepartment, setOfficialDepartment] = useState('');
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const toggleChatbot = () => setIsChatbotOpen(prev => !prev);
   
   // Loading states
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -198,7 +199,7 @@ export default function App() {
               onNavigate={handleNavigate}
               userName={userName}
               onLogout={handleLogout}
-              onToggleChatbot={() => setIsChatbotOpen(!isChatbotOpen)}
+              onToggleChatbot={toggleChatbot}
             />
           </PageTransition>
         );
@@ -206,70 +207,70 @@ export default function App() {
       case 'digital-id':
         return (
           <PageTransition key="digital-id">
-            <DigitalIdCard userName={userName} onNavigate={handleNavigate} />
+            <DigitalIdCard userName={userName} onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
       
       case 'education':
         return (
           <PageTransition key="education">
-            <EducationAssistance onNavigate={handleNavigate} />
+            <EducationAssistance onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
       
       case 'health':
         return (
           <PageTransition key="health">
-            <HealthServices onNavigate={handleNavigate} />
+            <HealthServices onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
       
       case 'feedback':
         return (
           <PageTransition key="feedback">
-            <CitizenFeedback onNavigate={handleNavigate} />
+            <CitizenFeedback onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
       
       case 'schemes':
         return (
           <PageTransition key="schemes">
-            <GovernmentSchemes onNavigate={handleNavigate} />
+            <GovernmentSchemes onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
       
       case 'complaints':
         return (
           <PageTransition key="complaints">
-            <Complaints onNavigate={handleNavigate} />
+            <Complaints onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
       
       case 'applications':
         return (
           <PageTransition key="applications">
-            <Applications onNavigate={handleNavigate} />
+            <Applications onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
       
       case 'children':
         return (
           <PageTransition key="children">
-            <Children onNavigate={handleNavigate} />
+            <Children onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
       
       case 'child-detail':
         return (
           <PageTransition key={`child-detail-${selectedChildId}`}>
-            <ChildDetail onNavigate={handleNavigate} childId={selectedChildId} />
+            <ChildDetail onNavigate={handleNavigate} childId={selectedChildId} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
       
       case 'bill-payments':
         return (
           <PageTransition key="bill-payments">
-            <BillPayments onNavigate={handleNavigate} />
+            <BillPayments onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
       
@@ -404,7 +405,7 @@ export default function App() {
         )}
         <Toaster />
       </div>
-      {isAuthenticated && <ChatbotWidget isOpen={isChatbotOpen} onToggle={() => setIsChatbotOpen(!isChatbotOpen)} />}
+      <ChatbotWidget isOpen={isChatbotOpen} onToggle={toggleChatbot} />
     </>
   );
 }

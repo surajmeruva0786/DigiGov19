@@ -13,6 +13,7 @@ import {
   Video,
   ChevronLeft,
   ChevronRight,
+  MessageSquareText,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -31,6 +32,7 @@ import {
 interface ChildDetailProps {
   onNavigate: (page: string) => void;
   childId?: string;
+  onToggleChatbot?: () => void;
 }
 
 interface Vaccination {
@@ -47,7 +49,7 @@ interface LearningResource {
   url: string;
 }
 
-export function ChildDetail({ onNavigate, childId }: ChildDetailProps) {
+export function ChildDetail({ onNavigate, childId, onToggleChatbot }: ChildDetailProps) {
   const [activeTab, setActiveTab] = useState('attendance');
   const [showVaccineForm, setShowVaccineForm] = useState(false);
   const [showResourceForm, setShowResourceForm] = useState(false);
@@ -142,19 +144,33 @@ export function ChildDetail({ onNavigate, childId }: ChildDetailProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Header */}
         <motion.div
-          className="flex items-center gap-4 mb-8"
+          className="flex items-center justify-between gap-4 mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onNavigate('children')}
-            className="hover:bg-white/50"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="gradient-text text-4xl">Sarah Johnson</h1>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onNavigate('children')}
+              className="hover:bg-white/50"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="gradient-text text-4xl">Sarah Johnson</h1>
+          </div>
+          {onToggleChatbot && (
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="relative hover:bg-white/50"
+                onClick={onToggleChatbot}
+              >
+                <MessageSquareText className="w-5 h-5" />
+              </Button>
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Tabs */}

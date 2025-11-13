@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageSquare, Send, CheckCircle, Clock, AlertCircle, ArrowLeft } from 'lucide-react';
+import { MessageSquare, Send, CheckCircle, Clock, AlertCircle, ArrowLeft, MessageSquareText } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -8,12 +8,14 @@ import { Textarea } from './ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner@2.0.3';
+import { motion } from 'motion/react';
 
 interface CitizenFeedbackProps {
   onNavigate: (page: string) => void;
+  onToggleChatbot?: () => void;
 }
 
-export function CitizenFeedback({ onNavigate }: CitizenFeedbackProps) {
+export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedbackProps) {
   const [activeTab, setActiveTab] = useState('submit');
 
   const myFeedback = [
@@ -60,6 +62,18 @@ export function CitizenFeedback({ onNavigate }: CitizenFeedbackProps) {
             <MessageSquare className="w-8 h-8 text-purple-600" />
             <h1>Citizen Feedback</h1>
           </div>
+          {onToggleChatbot && (
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="relative hover:bg-white/50"
+                onClick={onToggleChatbot}
+              >
+                <MessageSquareText className="w-5 h-5" />
+              </Button>
+            </motion.div>
+          )}
         </div>
         <p className="text-gray-600 ml-14">
           Share your thoughts, suggestions, and concerns to help us improve our services
