@@ -71,6 +71,9 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
   const [isLoadingComplaints, setIsLoadingComplaints] = useState(true);
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(true);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(true);
+  const [complaints, setComplaints] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [feedbackData, setFeedbackData] = useState<any[]>([]);
 
   // Fetch data from Firestore
   useEffect(() => {
@@ -115,8 +118,8 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
             }
           ],
         }));
-        // Update the complaints array with real data
-        complaints.splice(0, complaints.length, ...transformedComplaints);
+        // Update the complaints state with real data
+        setComplaints(transformedComplaints);
       }
     } catch (error) {
       console.error('Error fetching complaints:', error);
@@ -149,8 +152,8 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
           fileLink: doc.fileUrl,
           purpose: doc.category || 'General',
         }));
-        // Update the documents array with real data
-        documents.splice(0, documents.length, ...transformedDocuments);
+        // Update the documents state with real data
+        setDocuments(transformedDocuments);
       }
     } catch (error) {
       console.error('Error fetching documents:', error);
@@ -182,8 +185,8 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
           status: item.status === 'pending' ? 'Pending Review' : 'Reviewed',
           officialResponse: item.response || '',
         }));
-        // Update the feedbackData array with real data
-        feedbackData.splice(0, feedbackData.length, ...transformedFeedback);
+        // Update the feedbackData state with real data
+        setFeedbackData(transformedFeedback);
       }
     } catch (error) {
       console.error('Error fetching feedback:', error);
@@ -256,67 +259,8 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
     },
   ];
 
-  const complaints = [
-    {
-      id: 'CMP-001',
-      citizen: 'Rajesh Kumar',
-      citizenPhone: '+91 98765 43210',
-      citizenEmail: 'rajesh@email.com',
-      department: 'Water Supply',
-      subject: 'No water supply for 3 days',
-      description: 'There has been no water supply in our locality for the past 3 days. Multiple residents are facing severe hardship. We request immediate action to restore the water supply. The issue started on November 1st and despite multiple calls to the local office, no action has been taken.',
-      location: 'Sector 15, Block A, Green Park',
-      status: 'Pending',
-      priority: 'High',
-      date: 'Nov 4, 2025',
-      documentLinks: ['https://drive.google.com/file/d/sample1', 'https://drive.google.com/file/d/sample2'],
-      assignedTo: 'Not Assigned',
-      timeline: [
-        { status: 'Submitted', date: 'Nov 4, 2025', description: 'Complaint filed by citizen' },
-      ]
-    },
-    {
-      id: 'CMP-002',
-      citizen: 'Priya Sharma',
-      citizenPhone: '+91 98765 43211',
-      citizenEmail: 'priya@email.com',
-      department: 'Roads',
-      subject: 'Pothole on Main Street',
-      description: 'There is a large pothole on Main Street near the market that has been causing accidents. Two-wheelers have fallen in this pothole. Urgent repair needed before more accidents occur.',
-      location: 'Main Street, near City Market',
-      status: 'In Progress',
-      priority: 'Medium',
-      date: 'Nov 3, 2025',
-      documentLinks: ['https://drive.google.com/file/d/sample3'],
-      assignedTo: 'Road Maintenance Team',
-      timeline: [
-        { status: 'Submitted', date: 'Nov 3, 2025', description: 'Complaint filed by citizen' },
-        { status: 'Acknowledged', date: 'Nov 3, 2025', description: 'Complaint acknowledged by department' },
-        { status: 'In Progress', date: 'Nov 3, 2025', description: 'Team assigned to inspect the location' }
-      ]
-    },
-    {
-      id: 'CMP-003',
-      citizen: 'Amit Patel',
-      citizenPhone: '+91 98765 43212',
-      citizenEmail: 'amit@email.com',
-      department: 'Electricity',
-      subject: 'Frequent power cuts',
-      description: 'Our area experiences power cuts 4-5 times daily, each lasting 1-2 hours. This is affecting work from home and business operations. Request permanent solution.',
-      location: 'Karol Bagh, Block C',
-      status: 'Resolved',
-      priority: 'High',
-      date: 'Nov 2, 2025',
-      documentLinks: [],
-      assignedTo: 'Electrical Department',
-      timeline: [
-        { status: 'Submitted', date: 'Nov 2, 2025', description: 'Complaint filed by citizen' },
-        { status: 'Acknowledged', date: 'Nov 2, 2025', description: 'Complaint acknowledged' },
-        { status: 'In Progress', date: 'Nov 2, 2025', description: 'Team assigned' },
-        { status: 'Resolved', date: 'Nov 2, 2025', description: 'Faulty transformer replaced. Issue resolved.' }
-      ]
-    },
-  ];
+  // Mock data removed - using state variables initialized above
+
 
   const schemeApplications = [
     {
@@ -529,73 +473,8 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
     },
   ];
 
-  const documents = [
-    {
-      id: 'DOC-001',
-      user: 'Rajesh Kumar',
-      userId: 'USR-001',
-      userPhone: '+91 98765 43210',
-      userEmail: 'rajesh@email.com',
-      type: 'Aadhaar Card',
-      documentNumber: 'XXXX-XXXX-5678',
-      uploadedOn: 'Nov 4, 2025',
-      expiryDate: 'N/A',
-      status: 'Verified',
-      verifiedBy: 'Admin',
-      verifiedOn: 'Nov 4, 2025',
-      fileLink: 'https://drive.google.com/file/d/sample1',
-      purpose: 'Identity Verification'
-    },
-    {
-      id: 'DOC-002',
-      user: 'Priya Sharma',
-      userId: 'USR-002',
-      userPhone: '+91 98765 43211',
-      userEmail: 'priya@email.com',
-      type: 'Income Certificate',
-      documentNumber: 'INC/2025/12345',
-      uploadedOn: 'Nov 3, 2025',
-      expiryDate: 'Nov 3, 2026',
-      status: 'Pending',
-      verifiedBy: '',
-      verifiedOn: '',
-      fileLink: 'https://drive.google.com/file/d/sample2',
-      purpose: 'Scheme Application'
-    },
-    {
-      id: 'DOC-003',
-      user: 'Amit Patel',
-      userId: 'USR-003',
-      userPhone: '+91 98765 43212',
-      userEmail: 'amit@email.com',
-      type: 'Birth Certificate',
-      documentNumber: 'BC/2025/67890',
-      uploadedOn: 'Nov 2, 2025',
-      expiryDate: 'N/A',
-      status: 'Verified',
-      verifiedBy: 'Admin',
-      verifiedOn: 'Nov 2, 2025',
-      fileLink: 'https://drive.google.com/file/d/sample3',
-      purpose: 'Child Registration'
-    },
-    {
-      id: 'DOC-004',
-      user: 'Sneha Reddy',
-      userId: 'USR-004',
-      userPhone: '+91 98765 43213',
-      userEmail: 'sneha@email.com',
-      type: 'Caste Certificate',
-      documentNumber: 'CC/2025/11111',
-      uploadedOn: 'Nov 1, 2025',
-      expiryDate: 'Nov 1, 2026',
-      status: 'Rejected',
-      verifiedBy: 'Admin',
-      verifiedOn: 'Nov 1, 2025',
-      fileLink: 'https://drive.google.com/file/d/sample4',
-      purpose: 'Scholarship Application',
-      rejectionReason: 'Document not clear, please re-upload'
-    },
-  ];
+  // Mock documents removed - using state variable initialized above
+
 
   const billPayments = [
     {
@@ -831,68 +710,10 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
     },
   ];
 
-  const feedbackData = [
-    {
-      id: 'FEED-001',
-      service: 'Digital ID Card',
-      rating: 4.5,
-      comment: 'Easy to use and quick process. The interface is very user-friendly.',
-      fullFeedback: 'I applied for a digital ID card and received it within 3 days. The entire process was smooth and the customer support was helpful. Would recommend to everyone.',
-      user: 'Rajesh Kumar',
-      userId: 'USR-001',
-      userPhone: '+91 98765 43210',
-      userEmail: 'rajesh@email.com',
-      date: 'Nov 4, 2025',
-      category: 'Digital Services',
-      status: 'Reviewed',
-      officialResponse: 'Thank you for your feedback!'
-    },
-    {
-      id: 'FEED-002',
-      service: 'Bill Payment',
-      rating: 5.0,
-      comment: 'Very convenient and secure payment system.',
-      fullFeedback: 'The bill payment feature is excellent. I can pay all my utility bills in one place without any hassle. The transaction is quick and I receive instant confirmation.',
-      user: 'Priya Sharma',
-      userId: 'USR-002',
-      userPhone: '+91 98765 43211',
-      userEmail: 'priya@email.com',
-      date: 'Nov 3, 2025',
-      category: 'Bill Payment',
-      status: 'Reviewed',
-      officialResponse: 'We appreciate your positive feedback!'
-    },
-    {
-      id: 'FEED-003',
-      service: 'Complaint Portal',
-      rating: 3.5,
-      comment: 'Could be faster in response time.',
-      fullFeedback: 'While the complaint filing system is easy to use, the response time could be improved. I had to wait for 5 days before getting any update on my complaint.',
-      user: 'Amit Patel',
-      userId: 'USR-003',
-      userPhone: '+91 98765 43212',
-      userEmail: 'amit@email.com',
-      date: 'Nov 2, 2025',
-      category: 'Complaints',
-      status: 'Pending Review',
-      officialResponse: ''
-    },
-    {
-      id: 'FEED-004',
-      service: 'Scholarship',
-      rating: 4.0,
-      comment: 'Good application process with clear guidelines.',
-      fullFeedback: 'The scholarship application was straightforward. All the requirements were clearly mentioned. However, the verification process took a bit longer than expected.',
-      user: 'Sneha Reddy',
-      userId: 'USR-004',
-      userPhone: '+91 98765 43213',
-      userEmail: 'sneha@email.com',
-      date: 'Nov 1, 2025',
-      category: 'Education',
-      status: 'Reviewed',
-      officialResponse: 'Thank you! We are working on speeding up the verification process.'
-    },
   ];
+
+  // Mock feedbackData removed - using state variable initialized above
+
 
   const notifications = [
     {
@@ -2092,15 +1913,15 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   className={`p-4 rounded-lg border transition-all cursor-pointer ${!notification.read
-                      ? 'bg-blue-50 border-blue-200 hover:bg-blue-100'
-                      : 'bg-white hover:bg-gray-50'
+                    ? 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                    : 'bg-white hover:bg-gray-50'
                     }`}
                   onClick={() => markNotificationRead(notification.id)}
                 >
                   <div className="flex items-start gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${notification.priority === 'high' ? 'bg-red-100' :
-                        notification.priority === 'medium' ? 'bg-yellow-100' :
-                          'bg-green-100'
+                      notification.priority === 'medium' ? 'bg-yellow-100' :
+                        'bg-green-100'
                       }`}>
                       {notification.type === 'application' && <FileText className="w-5 h-5 text-blue-600" />}
                       {notification.type === 'complaint' && <MessageSquare className="w-5 h-5 text-red-600" />}
