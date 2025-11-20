@@ -163,6 +163,7 @@ export function Complaints({ onNavigate, onToggleChatbot }: ComplaintsProps) {
       };
 
       const result = await submitComplaint(complaintData);
+      console.log('[Complaints] submitComplaint result:', result);
 
       if (result.success) {
         toast.success('Complaint submitted successfully!');
@@ -173,6 +174,7 @@ export function Complaints({ onNavigate, onToggleChatbot }: ComplaintsProps) {
         // Refresh complaints list
         fetchComplaints();
       } else {
+        console.error('[Complaints] Submission failed:', result);
         toast.error(result.message || 'Failed to submit complaint');
       }
     } catch (error) {
