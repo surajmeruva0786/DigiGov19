@@ -278,6 +278,66 @@ export async function createInitialOfficialAccount() {
 
 
 // --------------------------------------------------------------------------------
+// Firestore: complaints
+// --------------------------------------------------------------------------------
+export async function submitComplaint(data) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...data,
+      userId,
+      status: 'Pending',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      timeline: [
+        {
+          status: 'Submitted',
+          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          description: 'Complaint filed by citizen'
+        }
+      ]
+    };
+    const ref = await addDoc(collection(db, 'complaints'), payload);
+    return buildResponse(true, 'Complaint submitted successfully', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getComplaints(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'complaints'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Complaints fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllComplaints() {
+  try {
+    // Intended for admin/official use; rely on Firestore security rules for access control
+    const q = query(
+      collection(db, 'complaints'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'All complaints fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
 // Firestore: feedback
 // --------------------------------------------------------------------------------
 export async function submitFeedback(formData) {
