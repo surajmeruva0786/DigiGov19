@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Official Account - DigiGov</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .credentials {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔐 Create Official Account</h1>
+        <p>This will create the initial government official account in Firebase.</p>
+
+        <div class="credentials">
+            <strong>Account Details:</strong><br>
+            Email: manish@gov.in<br>
+            Password: qwerty<br>
+            Department: Digital Governance<br>
+            Role: Administrator
+        </div>
+
+        <button id="createBtn" onclick="createAccount()">Create Official Account</button>
+
+        <div id="status"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDb5KCyZI4gxaPqx4DZQQfxlGbU7YSspbo",
+            authDomain: "digigov19.firebaseapp.com",
+            projectId: "digigov19",
+            storageBucket: "digigov19.firebasestorage.app",
+            messagingSenderId: "690080012169",
+            appId: "1:690080012169:web:7108e44a0fd31541c5f358",
+            measurementId: "G-XTLL085NQC"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.createAccount = async function () {
+            const btn = document.getElementById('createBtn');
+            const status = document.getElementById('status');
+
+            btn.disabled = true;
+            btn.textContent = 'Creating account...';
+            status.style.display = 'none';
+
+            try {
+                const email = 'manish@gov.in';
+                const password = 'qwerty';
+
+                // Create authentication account
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const uid = userCredential.user.uid;
+
+                // Create Firestore profile
+                const officialProfile = {
+                    email: email,
+                    uid: uid,
+                    name: 'Manish',
+                    department: 'Digital Governance',
+                    role: 'Administrator',
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                };
+
+                await setDoc(doc(db, 'officials', uid), officialProfile);
+
+                // Success
+                status.className = 'success';
+                status.innerHTML = `
+                    <strong>✅ Success!</strong><br><br>
+                    Official account created successfully!<br><br>
+                    <strong>Login Credentials:</strong><br>
+                    Email: ${email}<br>
+                    Password: ${password}<br>
+                    UID: ${uid}<br><br>
+                    You can now close this page and login to the app!
+                `;
+                status.style.display = 'block';
+                btn.textContent = 'Account Created ✓';
+
+            } catch (error) {
+                console.error('Error:', error);
+
+                if (error.code === 'auth/email-already-in-use') {
+                    status.className = 'info';
+                    status.innerHTML = `
+                        <strong>ℹ️ Account Already Exists</strong><br><br>
+                        The account is already created!<br><br>
+                        <strong>Login Credentials:</strong><br>
+                        Email: manish@gov.in<br>
+                        Password: qwerty<br><br>
+                        You can close this page and login to the app!
+                    `;
+                } else {
+                    status.className = 'error';
+                    status.innerHTML = `
+                        <strong>❌ Error</strong><br><br>
+                        ${error.message}<br><br>
+                        Error Code: ${error.code || 'Unknown'}
+                    `;
+                }
+                status.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Try Again';
+            }
+        };
+    </script>
+</body>
+
+</html>

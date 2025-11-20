@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { MessageSquare, Send, CheckCircle, Clock, AlertCircle, ArrowLeft, MessageSquareText } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MessageSquare, Send, CheckCircle, Clock, AlertCircle, ArrowLeft, MessageSquareText, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -17,32 +17,104 @@ interface CitizenFeedbackProps {
 
 export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedbackProps) {
   const [activeTab, setActiveTab] = useState('submit');
+  const [myFeedback, setMyFeedback] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const myFeedback = [
-    {
-      id: 'FB-2025-001',
-      category: 'Health Services',
-      subject: 'Long wait times at Central Medical Center',
-      submittedDate: 'Oct 28, 2025',
-      status: 'Under Review',
-      statusColor: 'bg-yellow-500',
-      priority: 'Medium',
-    },
-    {
-      id: 'FB-2025-002',
-      category: 'Digital Services',
-      subject: 'Suggestion for mobile app improvement',
-      submittedDate: 'Oct 15, 2025',
-      status: 'Resolved',
-      statusColor: 'bg-green-500',
-      priority: 'Low',
-      response: 'Thank you for your feedback. We have implemented your suggestion in our latest update.',
-    },
-  ];
+  // Form states
+  const [category, setCategory] = useState('');
+  const [feedbackType, setFeedbackType] = useState('');
+  const [subject, setSubject] = useState('');
+  const [description, setDescription] = useState('');
+  const [priority, setPriority] = useState('low');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [attachments, setAttachments] = useState('');
 
-  const handleSubmitFeedback = (e: React.FormEvent) => {
+  // Fetch feedback on component mount
+  useEffect(() => {
+    fetchFeedback();
+  }, []);
+
+  const fetchFeedback = async () => {
+    setIsLoading(true);
+    try {
+      const { getUserFeedback } = await import('../firebase');
+      const result = await getUserFeedback();
+
+      if (result.success) {
+        // Transform Firestore data
+        const transformedFeedback = result.data.map((item: any) => ({
+          id: `FB-${item.id.slice(-6).toUpperCase()}`,
+          category: item.category || 'General',
+          subject: item.subject,
+          submittedDate: item.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || 'Recent',
+          status: item.status === 'pending' ? 'Under Review' : 'Resolved',
+          statusColor: item.status === 'pending' ? 'bg-yellow-500' : 'bg-green-500',
+          priority: item.priority || 'Low',
+          response: item.response,
+        }));
+        setMyFeedback(transformedFeedback);
+      } else {
+        toast.error('Failed to load feedback');
+      }
+    } catch (error) {
+      console.error('Error fetching feedback:', error);
+      toast.error('Error loading feedback');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmitFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('Feedback submitted successfully!');
+
+    if (!category || !feedbackType || !subject || !description || !email) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { submitFeedback } = await import('../firebase');
+
+      const feedbackData = {
+        category,
+        type: feedbackType,
+        subject,
+        description,
+        priority,
+        email,
+        phone,
+        attachments: attachments.split('\n').filter(link => link.trim()),
+      };
+
+      const result = await submitFeedback(feedbackData);
+
+      if (result.success) {
+        toast.success('Feedback submitted successfully!');
+        // Reset form
+        setCategory('');
+        setFeedbackType('');
+        setSubject('');
+        setDescription('');
+        setPriority('low');
+        setEmail('');
+        setPhone('');
+        setAttachments('');
+        // Refresh feedback list
+        fetchFeedback();
+        // Switch to tracking tab
+        setActiveTab('tracking');
+      } else {
+        toast.error(result.message || 'Failed to submit feedback');
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      toast.error('Error submitting feedback');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -64,9 +136,9 @@ export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedback
           </div>
           {onToggleChatbot && (
             <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="relative hover:bg-white/50"
                 onClick={onToggleChatbot}
               >
@@ -102,6 +174,8 @@ export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedback
                   <select
                     id="category"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
                     required
                   >
                     <option value="">Select a category...</option>
@@ -121,6 +195,8 @@ export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedback
                   <select
                     id="type"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    value={feedbackType}
+                    onChange={(e) => setFeedbackType(e.target.value)}
                     required
                   >
                     <option value="">Select type...</option>
@@ -136,6 +212,8 @@ export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedback
                   <Input
                     id="subject"
                     placeholder="Brief summary of your feedback"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
                     required
                   />
                 </div>
@@ -147,6 +225,8 @@ export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedback
                     rows={6}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     placeholder="Please provide detailed information about your feedback. Include specific examples if applicable..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     required
                   ></textarea>
                 </div>
@@ -156,6 +236,8 @@ export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedback
                   <select
                     id="priority"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    value={priority}
+                    onChange={(e) => setPriority(e.target.value)}
                   >
                     <option value="low">Low - General feedback or suggestion</option>
                     <option value="medium">Medium - Issue affecting service quality</option>
@@ -170,6 +252,8 @@ export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedback
                       id="email"
                       type="email"
                       placeholder="your.email@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                     />
                   </div>
@@ -179,6 +263,8 @@ export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedback
                       id="phone"
                       type="tel"
                       placeholder="+1 (555) 123-4567"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
                     />
                   </div>
                 </div>
@@ -188,6 +274,8 @@ export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedback
                   <Textarea
                     id="attachments"
                     placeholder="https://drive.google.com/file/d/...&#10;https://drive.google.com/file/d/..."
+                    value={attachments}
+                    onChange={(e) => setAttachments(e.target.value)}
                     rows={3}
                   />
                   <p className="text-sm text-gray-500">
@@ -206,11 +294,20 @@ export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedback
                 </div>
 
                 <div className="flex gap-3">
-                  <Button type="submit" size="lg">
-                    <Send className="w-4 h-4 mr-2" />
-                    Submit Feedback
+                  <Button type="submit" size="lg" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 mr-2" />
+                        Submit Feedback
+                      </>
+                    )}
                   </Button>
-                  <Button type="button" variant="outline" size="lg">
+                  <Button type="button" variant="outline" size="lg" disabled={isSubmitting}>
                     Save as Draft
                   </Button>
                 </div>
@@ -229,7 +326,12 @@ export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedback
               </Button>
             </div>
 
-            {myFeedback.length > 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <Loader2 className="w-16 h-16 mx-auto mb-4 text-purple-500 animate-spin" />
+                <p className="text-gray-500">Loading feedback...</p>
+              </div>
+            ) : myFeedback.length > 0 ? (
               <div className="space-y-4">
                 {myFeedback.map((feedback) => (
                   <Card key={feedback.id}>

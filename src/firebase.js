@@ -17,6 +17,7 @@ import {
   updateDoc,
   addDoc,
   getDocs,
+  deleteDoc,
   collection,
   query,
   where,
@@ -415,10 +416,98 @@ export async function fetchDigitalID(userId) {
   }
 }
 
-// Optional: export a minimal read-only helper for diagnostics if needed
-export const firebaseInternal = {
-  // Not for external Firebase usage; exposed for potential diagnostics only
-  getCurrentUser: () => (auth.currentUser ? { uid: auth.currentUser.uid, email: auth.currentUser.email } : null),
-};
+// --------------------------------------------------------------------------------
+// Firestore: documents
+// --------------------------------------------------------------------------------
+export async function addDocument(documentData) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...documentData,
+      userId,
+      uploadDate: new Date().toISOString().split('T')[0],
+      createdAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'documents'), payload);
+    return buildResponse(true, 'Document added successfully', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getUserDocuments(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'documents'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Documents fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllDocuments() {
+  try {
+    const q = query(
+      collection(db, 'documents'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'All documents fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function deleteDocument(docId) {
+  try {
+    const userId = requireAuthUid();
+    // Verify ownership before deleting
+    const docRef = doc(db, 'documents', docId);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      return buildResponse(false, 'Document not found', null);
+    }
+
+    if (docSnap.data().userId !== userId) {
+      return buildResponse(false, 'Unauthorized to delete this document', null);
+    }
+
+    await deleteDoc(docRef);
+    return buildResponse(true, 'Document deleted successfully', { id: docId });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: feedback (additional function)
+// --------------------------------------------------------------------------------
+export async function getUserFeedback(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'feedback'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'User feedback fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
 
 

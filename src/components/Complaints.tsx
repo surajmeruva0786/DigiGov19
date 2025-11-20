@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft,
@@ -24,6 +24,7 @@ import {
   Calendar,
   FileText,
   MessageSquareText,
+  Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -33,6 +34,7 @@ import { Badge } from './ui/badge';
 import { Textarea } from './ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { Separator } from './ui/separator';
+import { toast } from 'sonner@2.0.3';
 
 interface ComplaintsProps {
   onNavigate: (page: string) => void;
@@ -66,9 +68,12 @@ export function Complaints({ onNavigate, onToggleChatbot }: ComplaintsProps) {
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
-  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [documentLinks, setDocumentLinks] = useState('');
   const [expandedComplaint, setExpandedComplaint] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('all');
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const departments: Department[] = [
     { id: 'revenue', name: 'Revenue', icon: Building2, color: 'from-blue-500 to-blue-600' },
@@ -82,67 +87,47 @@ export function Complaints({ onNavigate, onToggleChatbot }: ComplaintsProps) {
     { id: 'general', name: 'General', icon: MessageCircle, color: 'from-gray-500 to-gray-600' },
   ];
 
-  const mockComplaints: Complaint[] = [
-    {
-      id: '1',
-      complaintId: '#C12345',
-      department: 'Water Supply',
-      subject: 'Low water pressure in residential area',
-      description: 'The water pressure in our area has been very low for the past week. This is affecting daily activities and causing inconvenience to all residents.',
-      status: 'In Progress',
-      date: '2025-10-28',
-      response: 'Our team has inspected the area and identified the issue. We are working on fixing the main pipeline. Expected resolution in 2-3 days.',
-      timeline: [
-        { status: 'Submitted', date: '2025-10-28', description: 'Complaint filed by citizen' },
-        { status: 'Acknowledged', date: '2025-10-29', description: 'Complaint acknowledged by department' },
-        { status: 'In Progress', date: '2025-10-30', description: 'Team assigned and inspection completed' },
-      ],
-    },
-    {
-      id: '2',
-      complaintId: '#C12344',
-      department: 'Health',
-      subject: 'Sanitation issue in public hospital',
-      description: 'The public hospital toilets are not properly maintained. Need immediate attention for cleanliness.',
-      status: 'Resolved',
-      date: '2025-10-20',
-      response: 'The issue has been resolved. Additional cleaning staff has been assigned and a strict maintenance schedule has been implemented.',
-      timeline: [
-        { status: 'Submitted', date: '2025-10-20', description: 'Complaint filed by citizen' },
-        { status: 'Acknowledged', date: '2025-10-20', description: 'Complaint acknowledged by department' },
-        { status: 'In Progress', date: '2025-10-21', description: 'Cleaning staff assigned' },
-        { status: 'Resolved', date: '2025-10-22', description: 'Issue resolved and verified' },
-      ],
-    },
-    {
-      id: '3',
-      complaintId: '#C12343',
-      department: 'Electricity',
-      subject: 'Frequent power cuts in the evening',
-      description: 'There are frequent power cuts every evening between 6 PM to 9 PM. This has been happening for the last 10 days.',
-      status: 'Pending',
-      date: '2025-11-01',
-      timeline: [
-        { status: 'Submitted', date: '2025-11-01', description: 'Complaint filed by citizen' },
-        { status: 'Acknowledged', date: '2025-11-02', description: 'Complaint acknowledged by department' },
-      ],
-    },
-    {
-      id: '4',
-      complaintId: '#C12342',
-      department: 'Transport',
-      subject: 'Bus stop sign damaged',
-      description: 'The bus stop sign near City Center is damaged and needs replacement.',
-      status: 'In Progress',
-      date: '2025-10-25',
-      response: 'New sign has been ordered and will be installed within this week.',
-      timeline: [
-        { status: 'Submitted', date: '2025-10-25', description: 'Complaint filed by citizen' },
-        { status: 'Acknowledged', date: '2025-10-25', description: 'Complaint acknowledged by department' },
-        { status: 'In Progress', date: '2025-10-26', description: 'Work order issued' },
-      ],
-    },
-  ];
+  // Fetch complaints on component mount
+  useEffect(() => {
+    fetchComplaints();
+  }, []);
+
+  const fetchComplaints = async () => {
+    setIsLoading(true);
+    try {
+      const { getComplaints } = await import('../firebase');
+      const result = await getComplaints();
+
+      if (result.success) {
+        // Transform Firestore data to match component interface
+        const transformedComplaints = result.data.map((complaint: any) => ({
+          id: complaint.id,
+          complaintId: `#C${complaint.id.slice(-5)}`,
+          department: complaint.department,
+          subject: complaint.subject,
+          description: complaint.description,
+          status: complaint.status,
+          date: complaint.createdAt?.toDate?.()?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+          response: complaint.response,
+          timeline: complaint.timeline || [
+            {
+              status: 'Submitted',
+              date: complaint.createdAt?.toDate?.()?.toLocaleDateString() || new Date().toLocaleDateString(),
+              description: 'Complaint filed by citizen'
+            }
+          ],
+        }));
+        setComplaints(transformedComplaints);
+      } else {
+        toast.error('Failed to load complaints');
+      }
+    } catch (error) {
+      console.error('Error fetching complaints:', error);
+      toast.error('Error loading complaints');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -159,22 +144,53 @@ export function Complaints({ onNavigate, onToggleChatbot }: ComplaintsProps) {
     }
   };
 
-  const handleSubmit = () => {
-    // Handle complaint submission
-    setSelectedDepartment(null);
-    setSubject('');
-    setDescription('');
-    setAttachedFiles([]);
+  const handleSubmit = async () => {
+    if (!selectedDepartment || !subject || !description) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { submitComplaint } = await import('../firebase');
+
+      const complaintData = {
+        department: selectedDepartment.name,
+        subject,
+        description,
+        documentLinks: documentLinks.split('\n').filter(link => link.trim()),
+        priority: 'Medium',
+      };
+
+      const result = await submitComplaint(complaintData);
+
+      if (result.success) {
+        toast.success('Complaint submitted successfully!');
+        setSelectedDepartment(null);
+        setSubject('');
+        setDescription('');
+        setDocumentLinks('');
+        // Refresh complaints list
+        fetchComplaints();
+      } else {
+        toast.error(result.message || 'Failed to submit complaint');
+      }
+    } catch (error) {
+      console.error('Error submitting complaint:', error);
+      toast.error('Error submitting complaint');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
     setSelectedDepartment(null);
     setSubject('');
     setDescription('');
-    setAttachedFiles([]);
+    setDocumentLinks('');
   };
 
-  const filteredComplaints = mockComplaints.filter((complaint) => {
+  const filteredComplaints = complaints.filter((complaint) => {
     if (activeTab === 'all') return true;
     return complaint.status.toLowerCase().replace(' ', '-') === activeTab;
   });
@@ -201,9 +217,9 @@ export function Complaints({ onNavigate, onToggleChatbot }: ComplaintsProps) {
             </Button>
             {onToggleChatbot && (
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="relative hover:bg-white/50"
                   onClick={onToggleChatbot}
                 >
@@ -323,6 +339,8 @@ export function Complaints({ onNavigate, onToggleChatbot }: ComplaintsProps) {
                     <Textarea
                       id="doc-links"
                       placeholder="https://drive.google.com/file/d/...&#10;https://drive.google.com/file/d/..."
+                      value={documentLinks}
+                      onChange={(e) => setDocumentLinks(e.target.value)}
                       rows={4}
                       className="resize-none bg-white/50 border-gray-200/50 focus:bg-white"
                     />
@@ -332,13 +350,22 @@ export function Complaints({ onNavigate, onToggleChatbot }: ComplaintsProps) {
                   <div className="flex gap-3 pt-4">
                     <Button
                       onClick={handleSubmit}
+                      disabled={isSubmitting}
                       className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg"
                     >
-                      Submit Complaint
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        'Submit Complaint'
+                      )}
                     </Button>
                     <Button
                       variant="outline"
                       onClick={handleCancel}
+                      disabled={isSubmitting}
                       className="flex-1 hover:bg-gray-50"
                     >
                       Cancel
@@ -371,7 +398,12 @@ export function Complaints({ onNavigate, onToggleChatbot }: ComplaintsProps) {
 
                 {/* Complaints List */}
                 <div className="space-y-4">
-                  {filteredComplaints.length === 0 ? (
+                  {isLoading ? (
+                    <div className="text-center py-12">
+                      <Loader2 className="w-16 h-16 mx-auto mb-4 text-blue-500 animate-spin" />
+                      <p className="text-gray-500">Loading complaints...</p>
+                    </div>
+                  ) : filteredComplaints.length === 0 ? (
                     <div className="text-center py-12">
                       <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                       <p className="text-gray-500">No complaints found</p>
@@ -414,7 +446,7 @@ export function Complaints({ onNavigate, onToggleChatbot }: ComplaintsProps) {
                               {/* Date */}
                               <div className="flex items-center gap-2 text-sm text-gray-500">
                                 <Calendar className="w-4 h-4" />
-                                <span>Submitted on {new Date(complaint.date).toLocaleDateString('en-IN', { 
+                                <span>Submitted on {new Date(complaint.date).toLocaleDateString('en-IN', {
                                   day: 'numeric',
                                   month: 'long',
                                   year: 'numeric'

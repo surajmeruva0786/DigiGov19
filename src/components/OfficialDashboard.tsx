@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Users,
@@ -36,6 +36,7 @@ import {
   School,
   Stethoscope,
   Droplet,
+  Loader2,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
@@ -67,10 +68,133 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
   const [actionType, setActionType] = useState<'approve' | 'reject' | 'update' | 'view'>('view');
   const [actionNotes, setActionNotes] = useState('');
   const [newStatus, setNewStatus] = useState('');
+  const [isLoadingComplaints, setIsLoadingComplaints] = useState(true);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(true);
+  const [isLoadingFeedback, setIsLoadingFeedback] = useState(true);
+
+  // Fetch data from Firestore
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  const fetchAllData = async () => {
+    await Promise.all([
+      fetchComplaints(),
+      fetchDocuments(),
+      fetchFeedback()
+    ]);
+  };
+
+  const fetchComplaints = async () => {
+    setIsLoadingComplaints(true);
+    try {
+      const { getAllComplaints } = await import('../firebase');
+      const result = await getAllComplaints();
+
+      if (result.success && result.data.length > 0) {
+        // Transform Firestore data to match component interface
+        const transformedComplaints = result.data.map((complaint: any) => ({
+          id: `CMP-${complaint.id.slice(-3)}`,
+          citizen: complaint.userId || 'Unknown',
+          citizenPhone: complaint.phone || 'N/A',
+          citizenEmail: complaint.email || 'N/A',
+          department: complaint.department,
+          subject: complaint.subject,
+          description: complaint.description,
+          location: complaint.location || 'Not specified',
+          status: complaint.status,
+          priority: complaint.priority || 'Medium',
+          date: complaint.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || 'Recent',
+          documentLinks: complaint.documentLinks || [],
+          assignedTo: complaint.assignedTo || 'Not Assigned',
+          timeline: complaint.timeline || [
+            {
+              status: 'Submitted',
+              date: complaint.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || 'Recent',
+              description: 'Complaint filed by citizen'
+            }
+          ],
+        }));
+        // Update the complaints array with real data
+        complaints.splice(0, complaints.length, ...transformedComplaints);
+      }
+    } catch (error) {
+      console.error('Error fetching complaints:', error);
+    } finally {
+      setIsLoadingComplaints(false);
+    }
+  };
+
+  const fetchDocuments = async () => {
+    setIsLoadingDocuments(true);
+    try {
+      const { getAllDocuments } = await import('../firebase');
+      const result = await getAllDocuments();
+
+      if (result.success && result.data.length > 0) {
+        // Transform Firestore data
+        const transformedDocuments = result.data.map((doc: any) => ({
+          id: `DOC-${doc.id.slice(-3)}`,
+          user: doc.userId || 'Unknown',
+          userId: doc.userId,
+          userPhone: 'N/A',
+          userEmail: 'N/A',
+          type: doc.type,
+          documentNumber: 'N/A',
+          uploadedOn: doc.uploadDate || doc.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || 'Recent',
+          expiryDate: 'N/A',
+          status: 'Verified',
+          verifiedBy: '',
+          verifiedOn: '',
+          fileLink: doc.fileUrl,
+          purpose: doc.category || 'General',
+        }));
+        // Update the documents array with real data
+        documents.splice(0, documents.length, ...transformedDocuments);
+      }
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+    } finally {
+      setIsLoadingDocuments(false);
+    }
+  };
+
+  const fetchFeedback = async () => {
+    setIsLoadingFeedback(true);
+    try {
+      const { getAllFeedback } = await import('../firebase');
+      const result = await getAllFeedback();
+
+      if (result.success && result.data.length > 0) {
+        // Transform Firestore data
+        const transformedFeedback = result.data.map((item: any) => ({
+          id: `FEED-${item.id.slice(-3)}`,
+          service: item.category || 'General Service',
+          rating: 4.0,
+          comment: item.subject,
+          fullFeedback: item.description,
+          user: item.userId || 'Unknown',
+          userId: item.userId,
+          userPhone: item.phone || 'N/A',
+          userEmail: item.email,
+          date: item.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || 'Recent',
+          category: item.category,
+          status: item.status === 'pending' ? 'Pending Review' : 'Reviewed',
+          officialResponse: item.response || '',
+        }));
+        // Update the feedbackData array with real data
+        feedbackData.splice(0, feedbackData.length, ...transformedFeedback);
+      }
+    } catch (error) {
+      console.error('Error fetching feedback:', error);
+    } finally {
+      setIsLoadingFeedback(false);
+    }
+  };
 
   // Sample expanded data matching citizen forms
   const userSignups = [
-    { 
+    {
       id: 'USR-001',
       name: 'Rajesh Kumar',
       aadhaar: 'XXXX-XXXX-5678',
@@ -90,7 +214,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       documents: 5,
       verificationStatus: 'Verified'
     },
-    { 
+    {
       id: 'USR-002',
       name: 'Priya Sharma',
       aadhaar: 'XXXX-XXXX-9012',
@@ -110,7 +234,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       documents: 4,
       verificationStatus: 'Pending'
     },
-    { 
+    {
       id: 'USR-003',
       name: 'Amit Patel',
       aadhaar: 'XXXX-XXXX-3456',
@@ -133,7 +257,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
   ];
 
   const complaints = [
-    { 
+    {
       id: 'CMP-001',
       citizen: 'Rajesh Kumar',
       citizenPhone: '+91 98765 43210',
@@ -151,7 +275,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
         { status: 'Submitted', date: 'Nov 4, 2025', description: 'Complaint filed by citizen' },
       ]
     },
-    { 
+    {
       id: 'CMP-002',
       citizen: 'Priya Sharma',
       citizenPhone: '+91 98765 43211',
@@ -171,7 +295,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
         { status: 'In Progress', date: 'Nov 3, 2025', description: 'Team assigned to inspect the location' }
       ]
     },
-    { 
+    {
       id: 'CMP-003',
       citizen: 'Amit Patel',
       citizenPhone: '+91 98765 43212',
@@ -195,7 +319,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
   ];
 
   const schemeApplications = [
-    { 
+    {
       id: 'APP-001',
       // Personal Details
       fullName: 'Rajesh Kumar',
@@ -231,7 +355,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       eligibility: 'Eligible',
       verificationStatus: 'Documents Pending Review'
     },
-    { 
+    {
       id: 'APP-002',
       // Personal Details
       fullName: 'Priya Sharma',
@@ -266,7 +390,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       eligibility: 'Eligible',
       verificationStatus: 'Verified and Approved'
     },
-    { 
+    {
       id: 'APP-003',
       // Personal Details
       fullName: 'Amit Patel',
@@ -310,7 +434,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
   ];
 
   const scholarshipApplications = [
-    { 
+    {
       id: 'SCH-001',
       student: 'Aarav Kumar',
       parent: 'Rajesh Kumar',
@@ -330,7 +454,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       ],
       appliedOn: 'Oct 20, 2025'
     },
-    { 
+    {
       id: 'SCH-002',
       student: 'Diya Sharma',
       parent: 'Priya Sharma',
@@ -352,7 +476,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
   ];
 
   const childrenData = [
-    { 
+    {
       id: 'CHD-001',
       name: 'Aarav Kumar',
       parent: 'Rajesh Kumar',
@@ -369,7 +493,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       medicalRecords: 'Up to date',
       registeredDate: 'Jan 10, 2025'
     },
-    { 
+    {
       id: 'CHD-002',
       name: 'Diya Sharma',
       parent: 'Priya Sharma',
@@ -386,7 +510,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       medicalRecords: 'Up to date',
       registeredDate: 'Feb 5, 2025'
     },
-    { 
+    {
       id: 'CHD-003',
       name: 'Arjun Patel',
       parent: 'Amit Patel',
@@ -406,7 +530,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
   ];
 
   const documents = [
-    { 
+    {
       id: 'DOC-001',
       user: 'Rajesh Kumar',
       userId: 'USR-001',
@@ -422,7 +546,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       fileLink: 'https://drive.google.com/file/d/sample1',
       purpose: 'Identity Verification'
     },
-    { 
+    {
       id: 'DOC-002',
       user: 'Priya Sharma',
       userId: 'USR-002',
@@ -438,7 +562,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       fileLink: 'https://drive.google.com/file/d/sample2',
       purpose: 'Scheme Application'
     },
-    { 
+    {
       id: 'DOC-003',
       user: 'Amit Patel',
       userId: 'USR-003',
@@ -454,7 +578,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       fileLink: 'https://drive.google.com/file/d/sample3',
       purpose: 'Child Registration'
     },
-    { 
+    {
       id: 'DOC-004',
       user: 'Sneha Reddy',
       userId: 'USR-004',
@@ -474,7 +598,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
   ];
 
   const billPayments = [
-    { 
+    {
       id: 'BILL-001',
       user: 'Rajesh Kumar',
       userId: 'USR-001',
@@ -490,7 +614,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       status: 'Paid',
       billingPeriod: 'Oct 2025'
     },
-    { 
+    {
       id: 'BILL-002',
       user: 'Priya Sharma',
       userId: 'USR-002',
@@ -506,7 +630,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       status: 'Paid',
       billingPeriod: 'Oct 2025'
     },
-    { 
+    {
       id: 'BILL-003',
       user: 'Amit Patel',
       userId: 'USR-003',
@@ -525,7 +649,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
   ];
 
   const activityLogs = [
-    { 
+    {
       id: 'LOG-001',
       timestamp: 'Nov 4, 2025 10:30 AM',
       user: 'Rajesh Kumar',
@@ -536,7 +660,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       deviceType: 'Mobile',
       status: 'Success'
     },
-    { 
+    {
       id: 'LOG-002',
       timestamp: 'Nov 4, 2025 09:15 AM',
       user: 'Priya Sharma',
@@ -547,7 +671,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       deviceType: 'Desktop',
       status: 'Success'
     },
-    { 
+    {
       id: 'LOG-003',
       timestamp: 'Nov 3, 2025 03:45 PM',
       user: 'Amit Patel',
@@ -558,7 +682,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       deviceType: 'Mobile',
       status: 'Success'
     },
-    { 
+    {
       id: 'LOG-004',
       timestamp: 'Nov 3, 2025 02:20 PM',
       user: 'Admin',
@@ -573,7 +697,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
 
   // Blood & Organ Donor Registrations
   const donorRegistrations = [
-    { 
+    {
       id: 'DONOR-001',
       donorName: 'Rajesh Kumar',
       userId: 'USR-001',
@@ -588,7 +712,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       status: 'Active',
       lastDonation: 'Oct 15, 2025'
     },
-    { 
+    {
       id: 'DONOR-002',
       donorName: 'Priya Sharma',
       userId: 'USR-002',
@@ -603,7 +727,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       status: 'Active',
       lastDonation: 'N/A'
     },
-    { 
+    {
       id: 'DONOR-003',
       donorName: 'Amit Patel',
       userId: 'USR-003',
@@ -618,7 +742,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       status: 'Active',
       lastDonation: 'Sep 20, 2025'
     },
-    { 
+    {
       id: 'DONOR-004',
       donorName: 'Sneha Reddy',
       userId: 'USR-004',
@@ -637,7 +761,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
 
   // Blood & Organ Requests
   const healthRequests = [
-    { 
+    {
       id: 'REQ-001',
       requesterName: 'Vikram Singh',
       userId: 'USR-005',
@@ -654,7 +778,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       status: 'Pending',
       matchedDonors: 0
     },
-    { 
+    {
       id: 'REQ-002',
       requesterName: 'Ravi Sharma',
       userId: 'USR-006',
@@ -671,7 +795,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       status: 'In Progress',
       matchedDonors: 2
     },
-    { 
+    {
       id: 'REQ-003',
       requesterName: 'Sunita Verma',
       userId: 'USR-007',
@@ -688,7 +812,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       status: 'Fulfilled',
       matchedDonors: 3
     },
-    { 
+    {
       id: 'REQ-004',
       requesterName: 'Karan Malhotra',
       userId: 'USR-008',
@@ -708,7 +832,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
   ];
 
   const feedbackData = [
-    { 
+    {
       id: 'FEED-001',
       service: 'Digital ID Card',
       rating: 4.5,
@@ -723,7 +847,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       status: 'Reviewed',
       officialResponse: 'Thank you for your feedback!'
     },
-    { 
+    {
       id: 'FEED-002',
       service: 'Bill Payment',
       rating: 5.0,
@@ -738,7 +862,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       status: 'Reviewed',
       officialResponse: 'We appreciate your positive feedback!'
     },
-    { 
+    {
       id: 'FEED-003',
       service: 'Complaint Portal',
       rating: 3.5,
@@ -753,7 +877,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       status: 'Pending Review',
       officialResponse: ''
     },
-    { 
+    {
       id: 'FEED-004',
       service: 'Scholarship',
       rating: 4.0,
@@ -820,7 +944,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
 
   const getStatusColor = (status?: string) => {
     if (!status) return 'bg-gray-100 text-gray-800';
-    
+
     switch (status.toLowerCase()) {
       case 'pending':
       case 'pending verification':
@@ -1072,7 +1196,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
                       </TableHeader>
                       <TableBody>
                         {userSignups.map((user) => (
-                          <TableRow 
+                          <TableRow
                             key={user.id}
                             className="cursor-pointer hover:bg-blue-50 transition-colors"
                             onClick={() => handleRowClick(user, 'User')}
@@ -1146,7 +1270,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
                       </TableHeader>
                       <TableBody>
                         {schemeApplications.map((app) => (
-                          <TableRow 
+                          <TableRow
                             key={app.id}
                             className="cursor-pointer hover:bg-blue-50 transition-colors"
                             onClick={() => handleRowClick(app, 'Application')}
@@ -1170,15 +1294,15 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
                                 </Button>
                                 {app.status === 'Pending' && (
                                   <>
-                                    <Button 
-                                      size="sm" 
+                                    <Button
+                                      size="sm"
                                       className="bg-green-600 hover:bg-green-700"
                                       onClick={() => handleAction(app, 'approve')}
                                     >
                                       <CheckCircle className="w-4 h-4" />
                                     </Button>
-                                    <Button 
-                                      size="sm" 
+                                    <Button
+                                      size="sm"
                                       variant="destructive"
                                       onClick={() => handleAction(app, 'reject')}
                                     >
@@ -1235,7 +1359,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
                       </TableHeader>
                       <TableBody>
                         {complaints.map((complaint) => (
-                          <TableRow 
+                          <TableRow
                             key={complaint.id}
                             className="cursor-pointer hover:bg-blue-50 transition-colors"
                             onClick={() => handleRowClick(complaint, 'Complaint')}
@@ -1883,7 +2007,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
                       </TableHeader>
                       <TableBody>
                         {scholarshipApplications.map((sch) => (
-                          <TableRow 
+                          <TableRow
                             key={sch.id}
                             className="cursor-pointer hover:bg-blue-50 transition-colors"
                             onClick={() => handleRowClick(sch, 'Scholarship')}
@@ -1959,7 +2083,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
               Stay updated with the latest activities and requests
             </DialogDescription>
           </DialogHeader>
-          
+
           <ScrollArea className="h-[500px] pr-4">
             <div className="space-y-3">
               {notifications.map((notification) => (
@@ -1967,19 +2091,17 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
                   key={notification.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className={`p-4 rounded-lg border transition-all cursor-pointer ${
-                    !notification.read 
-                      ? 'bg-blue-50 border-blue-200 hover:bg-blue-100' 
+                  className={`p-4 rounded-lg border transition-all cursor-pointer ${!notification.read
+                      ? 'bg-blue-50 border-blue-200 hover:bg-blue-100'
                       : 'bg-white hover:bg-gray-50'
-                  }`}
+                    }`}
                   onClick={() => markNotificationRead(notification.id)}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      notification.priority === 'high' ? 'bg-red-100' :
-                      notification.priority === 'medium' ? 'bg-yellow-100' :
-                      'bg-green-100'
-                    }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${notification.priority === 'high' ? 'bg-red-100' :
+                        notification.priority === 'medium' ? 'bg-yellow-100' :
+                          'bg-green-100'
+                      }`}>
                       {notification.type === 'application' && <FileText className="w-5 h-5 text-blue-600" />}
                       {notification.type === 'complaint' && <MessageSquare className="w-5 h-5 text-red-600" />}
                       {notification.type === 'document' && <FolderOpen className="w-5 h-5 text-purple-600" />}
@@ -2005,7 +2127,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       </Dialog>
 
       {/* Detail Modal - Will render different content based on selectedItem.type */}
-      <DetailModal 
+      <DetailModal
         open={showDetailModal}
         onOpenChange={setShowDetailModal}
         item={selectedItem}
@@ -2054,7 +2176,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
               <Textarea
                 id="action-notes"
                 placeholder={
-                  actionType === 'reject' 
+                  actionType === 'reject'
                     ? 'Please provide a detailed reason for rejection...'
                     : 'Add any additional notes or comments...'
                 }
@@ -2104,8 +2226,8 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
                 actionType === 'approve'
                   ? 'bg-green-600 hover:bg-green-700'
                   : actionType === 'reject'
-                  ? 'bg-red-600 hover:bg-red-700'
-                  : 'bg-blue-600 hover:bg-blue-700'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-blue-600 hover:bg-blue-700'
               }
               disabled={actionType === 'reject' && !actionNotes.trim()}
             >

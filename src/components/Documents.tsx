@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft,
@@ -17,6 +17,7 @@ import {
   Home,
   Heart,
   Briefcase,
+  Loader2,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -68,8 +69,11 @@ export function Documents({ onNavigate }: DocumentsProps) {
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [previewDocument, setPreviewDocument] = useState<Document | null>(null);
-  const [deleteDocument, setDeleteDocument] = useState<Document | null>(null);
-  
+  const [deleteDocumentItem, setDeleteDocumentItem] = useState<Document | null>(null);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
+
   // Form states
   const [documentType, setDocumentType] = useState('');
   const [documentName, setDocumentName] = useState('');
@@ -90,68 +94,29 @@ export function Documents({ onNavigate }: DocumentsProps) {
     { value: 'medical', label: 'Medical Certificate', category: 'other' },
   ];
 
-  const [documents, setDocuments] = useState<Document[]>([
-    {
-      id: '1',
-      type: 'Aadhaar Card',
-      name: 'Aadhaar - Rajesh Kumar',
-      uploadDate: '2024-10-15',
-      fileSize: '2.3 MB',
-      category: 'aadhaar',
-      fileUrl: '/sample-document.pdf',
-      fileType: 'pdf',
-    },
-    {
-      id: '2',
-      type: 'Ration Card',
-      name: 'Family Ration Card',
-      uploadDate: '2024-09-20',
-      fileSize: '1.8 MB',
-      category: 'ration',
-      fileUrl: '/sample-document.pdf',
-      fileType: 'image',
-    },
-    {
-      id: '3',
-      type: 'Birth Certificate',
-      name: 'Birth Certificate - Priya',
-      uploadDate: '2024-08-12',
-      fileSize: '1.2 MB',
-      category: 'certificates',
-      fileUrl: '/sample-document.pdf',
-      fileType: 'pdf',
-    },
-    {
-      id: '4',
-      type: 'Education Certificate',
-      name: '10th Marksheet - Priya',
-      uploadDate: '2024-07-05',
-      fileSize: '3.1 MB',
-      category: 'certificates',
-      fileUrl: '/sample-document.pdf',
-      fileType: 'image',
-    },
-    {
-      id: '5',
-      type: 'PAN Card',
-      name: 'PAN - Rajesh Kumar',
-      uploadDate: '2024-06-18',
-      fileSize: '0.9 MB',
-      category: 'other',
-      fileUrl: '/sample-document.pdf',
-      fileType: 'pdf',
-    },
-    {
-      id: '6',
-      type: 'Voter ID',
-      name: 'Voter ID - Rajesh Kumar',
-      uploadDate: '2024-05-22',
-      fileSize: '1.5 MB',
-      category: 'other',
-      fileUrl: '/sample-document.pdf',
-      fileType: 'image',
-    },
-  ]);
+  // Fetch documents on component mount
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  const fetchDocuments = async () => {
+    setIsLoading(true);
+    try {
+      const { getUserDocuments } = await import('../firebase');
+      const result = await getUserDocuments();
+
+      if (result.success) {
+        setDocuments(result.data);
+      } else {
+        toast.error('Failed to load documents');
+      }
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      toast.error('Error loading documents');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getDocumentIcon = (type: string) => {
     const iconMap: { [key: string]: any } = {
@@ -168,7 +133,7 @@ export function Documents({ onNavigate }: DocumentsProps) {
     return Icon;
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!documentType || !documentName || !documentLink) {
       toast.error('Please fill all required fields');
       return;
@@ -182,41 +147,66 @@ export function Documents({ onNavigate }: DocumentsProps) {
       return;
     }
 
-    const typeInfo = documentTypes.find(t => t.value === documentType);
-    
-    const newDocument: Document = {
-      id: Date.now().toString(),
-      type: typeInfo?.label || documentType,
-      name: documentName,
-      uploadDate: new Date().toISOString().split('T')[0],
-      fileSize: 'Link',
-      category: typeInfo?.category || 'other',
-      fileUrl: documentLink,
-      fileType: 'pdf',
-    };
+    setIsUploading(true);
+    try {
+      const { addDocument } = await import('../firebase');
+      const typeInfo = documentTypes.find(t => t.value === documentType);
 
-    setDocuments([newDocument, ...documents]);
-    toast.success('Document link added successfully!');
-    
-    // Reset form
-    setDocumentType('');
-    setDocumentName('');
-    setDocumentLink('');
-    setShowUploadForm(false);
+      const documentData = {
+        type: typeInfo?.label || documentType,
+        name: documentName,
+        category: typeInfo?.category || 'other',
+        fileUrl: documentLink,
+        fileType: 'pdf',
+        fileSize: 'Link',
+      };
+
+      const result = await addDocument(documentData);
+
+      if (result.success) {
+        toast.success('Document added successfully!');
+        setDocumentType('');
+        setDocumentName('');
+        setDocumentLink('');
+        setShowUploadForm(false);
+        // Refresh documents list
+        fetchDocuments();
+      } else {
+        toast.error(result.message || 'Failed to add document');
+      }
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      toast.error('Error uploading document');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
-  const handleDelete = (doc: Document) => {
-    setDocuments(documents.filter(d => d.id !== doc.id));
-    toast.success('Document deleted successfully');
-    setDeleteDocument(null);
-    setPreviewDocument(null);
+  const handleDelete = async (doc: Document) => {
+    try {
+      const { deleteDocument } = await import('../firebase');
+      const result = await deleteDocument(doc.id);
+
+      if (result.success) {
+        toast.success('Document deleted successfully');
+        setDeleteDocumentItem(null);
+        setPreviewDocument(null);
+        // Refresh documents list
+        fetchDocuments();
+      } else {
+        toast.error(result.message || 'Failed to delete document');
+      }
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error('Error deleting document');
+    }
   };
 
   const handleDownload = (doc: Document) => {
     toast.success(`Downloading ${doc.name}...`);
   };
 
-  const filteredDocuments = documents.filter(doc => 
+  const filteredDocuments = documents.filter(doc =>
     selectedCategory === 'all' || doc.category === selectedCategory
   );
 
@@ -240,7 +230,7 @@ export function Documents({ onNavigate }: DocumentsProps) {
                 <p className="text-sm text-gray-600">Manage your documents</p>
               </div>
             </div>
-            
+
             <Button
               onClick={() => setShowUploadForm(!showUploadForm)}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
@@ -335,10 +325,20 @@ export function Documents({ onNavigate }: DocumentsProps) {
                     </Button>
                     <Button
                       onClick={handleUpload}
+                      disabled={isUploading}
                       className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                     >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Document
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Document
+                        </>
+                      )}
                     </Button>
                   </div>
                 </CardContent>
@@ -359,7 +359,14 @@ export function Documents({ onNavigate }: DocumentsProps) {
         </Tabs>
 
         {/* Documents Grid */}
-        {filteredDocuments.length === 0 ? (
+        {isLoading ? (
+          <Card className="border-2 border-dashed border-gray-300">
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <Loader2 className="w-16 h-16 text-blue-500 mb-4 animate-spin" />
+              <p className="text-gray-600">Loading documents...</p>
+            </CardContent>
+          </Card>
+        ) : filteredDocuments.length === 0 ? (
           <Card className="border-2 border-dashed border-gray-300">
             <CardContent className="flex flex-col items-center justify-center py-16">
               <FileText className="w-16 h-16 text-gray-400 mb-4" />
@@ -430,7 +437,7 @@ export function Documents({ onNavigate }: DocumentsProps) {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => setDeleteDocument(doc)}
+                          onClick={() => setDeleteDocumentItem(doc)}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -452,7 +459,7 @@ export function Documents({ onNavigate }: DocumentsProps) {
             <DialogTitle className="text-gray-900">{previewDocument?.name}</DialogTitle>
           </DialogHeader>
           <p id="document-preview-description" className="sr-only">Preview and details of the selected document</p>
-          
+
           {previewDocument && (
             <div className="grid md:grid-cols-3 gap-6 h-full">
               {/* Preview Area */}
@@ -519,7 +526,7 @@ export function Documents({ onNavigate }: DocumentsProps) {
                     variant="outline"
                     className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
                     onClick={() => {
-                      setDeleteDocument(previewDocument);
+                      setDeleteDocumentItem(previewDocument);
                     }}
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
@@ -533,19 +540,19 @@ export function Documents({ onNavigate }: DocumentsProps) {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteDocument} onOpenChange={() => setDeleteDocument(null)}>
+      <AlertDialog open={!!deleteDocumentItem} onOpenChange={() => setDeleteDocumentItem(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-gray-900">Delete Document?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deleteDocument?.name}"? This action cannot be
+              Are you sure you want to delete "{deleteDocumentItem?.name}"? This action cannot be
               undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deleteDocument && handleDelete(deleteDocument)}
+              onClick={() => deleteDocumentItem && handleDelete(deleteDocumentItem)}
               className="bg-red-600 hover:bg-red-700"
             >
               Delete
