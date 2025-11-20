@@ -278,6 +278,25 @@ export async function createInitialOfficialAccount() {
 
 
 // --------------------------------------------------------------------------------
+// Helper: Get user profile
+// --------------------------------------------------------------------------------
+export async function getUserProfile(userId) {
+  try {
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      return null;
+    }
+
+    return { id: userSnap.id, ...userSnap.data() };
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    return null;
+  }
+}
+
+// --------------------------------------------------------------------------------
 // Firestore: complaints
 // --------------------------------------------------------------------------------
 export async function submitComplaint(data) {
@@ -331,7 +350,26 @@ export async function getAllComplaints() {
     );
     const snap = await getDocs(q);
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    return buildResponse(true, 'All complaints fetched', items);
+
+    // Fetch user details for each complaint
+    const itemsWithUserDetails = await Promise.all(
+      items.map(async (item) => {
+        if (item.userId) {
+          const userProfile = await getUserProfile(item.userId);
+          if (userProfile) {
+            return {
+              ...item,
+              userName: userProfile.name || userProfile.fullName || 'Unknown',
+              userPhone: userProfile.phone || userProfile.phoneNumber || 'N/A',
+              userEmail: userProfile.email || 'N/A',
+            };
+          }
+        }
+        return item;
+      })
+    );
+
+    return buildResponse(true, 'All complaints fetched', itemsWithUserDetails);
   } catch (error) {
     return buildResponse(false, parseFirebaseError(error), null);
   }
@@ -367,7 +405,26 @@ export async function getAllFeedback() {
     );
     const snap = await getDocs(q);
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    return buildResponse(true, 'Feedback fetched', items);
+
+    // Fetch user details for each feedback
+    const itemsWithUserDetails = await Promise.all(
+      items.map(async (item) => {
+        if (item.userId) {
+          const userProfile = await getUserProfile(item.userId);
+          if (userProfile) {
+            return {
+              ...item,
+              userName: userProfile.name || userProfile.fullName || 'Unknown',
+              userPhone: userProfile.phone || userProfile.phoneNumber || 'N/A',
+              userEmail: userProfile.email || 'N/A',
+            };
+          }
+        }
+        return item;
+      })
+    );
+
+    return buildResponse(true, 'Feedback fetched', itemsWithUserDetails);
   } catch (error) {
     return buildResponse(false, parseFirebaseError(error), null);
   }
@@ -521,7 +578,26 @@ export async function getAllDocuments() {
     );
     const snap = await getDocs(q);
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    return buildResponse(true, 'All documents fetched', items);
+
+    // Fetch user details for each document
+    const itemsWithUserDetails = await Promise.all(
+      items.map(async (item) => {
+        if (item.userId) {
+          const userProfile = await getUserProfile(item.userId);
+          if (userProfile) {
+            return {
+              ...item,
+              userName: userProfile.name || userProfile.fullName || 'Unknown',
+              userPhone: userProfile.phone || userProfile.phoneNumber || 'N/A',
+              userEmail: userProfile.email || 'N/A',
+            };
+          }
+        }
+        return item;
+      })
+    );
+
+    return buildResponse(true, 'All documents fetched', itemsWithUserDetails);
   } catch (error) {
     return buildResponse(false, parseFirebaseError(error), null);
   }
