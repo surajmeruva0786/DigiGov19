@@ -26,9 +26,9 @@ export function OfficialLogin({ onLogin, onBack, onForgotPassword }: OfficialLog
     return validDomains.some(validDomain => domain?.endsWith(validDomain));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Check if password is provided
     if (!password || password.length < 4) {
       toast.error('Please enter a valid password (minimum 4 characters)');
@@ -43,16 +43,41 @@ export function OfficialLogin({ onLogin, onBack, onForgotPassword }: OfficialLog
 
     setIsLoading(true);
 
-    // Simulate login
-    setTimeout(() => {
-      setIsLoading(false);
-      // Extract name from email (simplified)
-      const emailName = email.split('@')[0];
-      const name = emailName.charAt(0).toUpperCase() + emailName.slice(1).replace(/[._]/g, ' ');
-      const department = 'DigiGov Official';
+    try {
+      // Import Firebase functions
+      const { loginOfficial, getOfficialProfile } = await import('../firebase');
+
+      // Attempt to login
+      const loginResult = await loginOfficial(email, password);
+
+      if (!loginResult.success) {
+        toast.error(loginResult.message || 'Login failed');
+        setIsLoading(false);
+        return;
+      }
+
+      // Fetch official profile
+      const profileResult = await getOfficialProfile(loginResult.data.uid);
+
+      if (!profileResult.success) {
+        toast.error('Failed to fetch official profile');
+        setIsLoading(false);
+        return;
+      }
+
+      const profile = profileResult.data;
+      const name = profile.name || email.split('@')[0];
+      const department = profile.department || 'DigiGov Official';
+
+      // Success - call onLogin with real data
       onLogin(name, department);
       toast.success('Successfully logged in to Official Portal');
-    }, 1500);
+
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('An unexpected error occurred. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -144,7 +169,7 @@ export function OfficialLogin({ onLogin, onBack, onForgotPassword }: OfficialLog
                       Use your official government email address (.gov.in, .nic.in, or .ernet.in) to access the portal.
                     </p>
                     <p className="text-xs text-blue-700">
-                      <strong>Demo:</strong> Use <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-800">admin@gov.in</code> with any password (min 4 chars)
+                      <strong>Demo:</strong> Use <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-800">manish@gov.in</code> with password <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-800">qwerty</code>
                     </p>
                   </div>
                 </div>

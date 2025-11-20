@@ -1,0 +1,1142 @@
+// All Firebase logic centralized here. Do not import Firebase elsewhere.
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged as fbOnAuthStateChanged,
+  sendPasswordResetEmail,
+} from 'firebase/auth';
+import {
+  getFirestore,
+  serverTimestamp,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  addDoc,
+  getDocs,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+} from 'firebase/firestore';
+
+// --------------------------------------------------------------------------------
+// Firebase initialization (placeholders - replace with real values via env/config)
+// --------------------------------------------------------------------------------
+const firebaseConfig = {
+  apiKey: "AIzaSyDb5KCyZI4gxaPqx4DZQQfxlGbU7YSspbo",
+  authDomain: "digigov19.firebaseapp.com",
+  projectId: "digigov19",
+  storageBucket: "digigov19.firebasestorage.app",
+  messagingSenderId: "690080012169",
+  appId: "1:690080012169:web:7108e44a0fd31541c5f358",
+  measurementId: "G-XTLL085NQC"
+};
+
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Basic console log to identify Firebase initialization in the browser
+try {
+  // This indicates client-side SDK is initialized with a project
+  // It does not guarantee Firestore rules will allow access.
+  // A deeper connectivity probe follows below.
+  // eslint-disable-next-line no-console
+  console.info('[Firebase] Initialized. Project:', app.options?.projectId || '(unknown)');
+} catch (e) {
+  // eslint-disable-next-line no-console
+  console.error('[Firebase] Initialization log failed:', e);
+}
+
+// Connectivity check helper: attempts a read to gauge Firestore reachability.
+async function logFirebaseConnectivity() {
+  try {
+    // Read a dummy doc; it may not exist. Success means Firestore is reachable.
+    // If rules deny access, you'll see a permission error which we surface.
+    await getDoc(doc(db, '__health', '__ping'));
+    // eslint-disable-next-line no-console
+    console.info('[Firebase] Firestore reachable (read attempted).');
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[Firebase] Firestore not reachable:', parseFirebaseError(err));
+  }
+}
+// Kick off connectivity probe (non-blocking)
+// No top-level await; this runs in background.
+void logFirebaseConnectivity();
+
+// Public helper for on-demand connectivity checks
+export async function checkFirebaseConnection() {
+  try {
+    await getDoc(doc(db, '__health', '__ping'));
+    return buildResponse(true, 'Firestore reachable', null);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Helpers
+// --------------------------------------------------------------------------------
+function buildResponse(success, message, data) {
+  return { success, message, data: data ?? null };
+}
+
+function parseFirebaseError(error) {
+  if (!error || typeof error !== 'object') return 'Unknown error';
+  const code = error.code || '';
+  const message = error.message || 'Unexpected error';
+  // Prefer code when available for clarity, else message
+  return code ? code : message;
+}
+
+function requireAuthUid() {
+  const uid = auth.currentUser?.uid || null;
+  if (!uid) {
+    throw new Error('auth/not-authenticated');
+  }
+  return uid;
+}
+
+// --------------------------------------------------------------------------------
+// Authentication API
+// --------------------------------------------------------------------------------
+export async function registerUser(email, password, additionalData = {}) {
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const uid = cred.user.uid;
+
+    // Store user profile in Firestore
+    const userProfile = {
+      email,
+      uid,
+      createdAt: serverTimestamp(),
+      ...additionalData,
+    };
+    await setDoc(doc(db, 'users', uid), userProfile, { merge: true });
+
+    return buildResponse(true, 'Registration successful', { uid, email });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function loginUser(email, password) {
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    return buildResponse(true, 'Login successful', {
+      uid: cred.user.uid,
+      email: cred.user.email,
+    });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function logoutUser() {
+  try {
+    await signOut(auth);
+    return buildResponse(true, 'Logout successful', null);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export function onAuthStateChanged(callback) {
+  // Returns unsubscribe function
+  return fbOnAuthStateChanged(auth, (user) => {
+    if (!user) {
+      callback(null);
+    } else {
+      callback({
+        uid: user.uid,
+        email: user.email,
+      });
+    }
+  });
+}
+
+export async function sendPasswordReset(email) {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    return buildResponse(true, 'Password reset email sent', null);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: feedback
+// --------------------------------------------------------------------------------
+export async function submitFeedback(formData) {
+  try {
+    const userId = auth.currentUser?.uid || null;
+    const payload = {
+      ...formData,
+      userId,
+      status: 'pending',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'feedback'), payload);
+    return buildResponse(true, 'Feedback submitted', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllFeedback() {
+  try {
+    // Intended for admin use; rely on Firestore security rules for access control
+    const q = query(
+      collection(db, 'feedback'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Feedback fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function updateFeedbackStatus(id, status) {
+  try {
+    await updateDoc(doc(db, 'feedback', id), {
+      status,
+      updatedAt: serverTimestamp(),
+    });
+    return buildResponse(true, 'Feedback status updated', { id, status });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: educationApplications
+// --------------------------------------------------------------------------------
+export async function submitEducationForm(data) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...data,
+      userId,
+      status: 'submitted',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'educationApplications'), payload);
+    return buildResponse(true, 'Application submitted', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getUserApplications(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'educationApplications'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Applications fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: appointments
+// --------------------------------------------------------------------------------
+export async function bookAppointment(data) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...data,
+      userId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'appointments'), payload);
+    return buildResponse(true, 'Appointment booked', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAppointments(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    // Sorting by a potential 'date' if present, else by createdAt
+    const q = query(
+      collection(db, 'appointments'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Appointments fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: digitalIDs
+// --------------------------------------------------------------------------------
+export async function fetchDigitalID(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const ref = doc(db, 'digitalIDs', safeUid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      return buildResponse(false, 'Digital ID not found', null);
+    }
+    return buildResponse(true, 'Digital ID fetched', { id: snap.id, ...snap.data() });
+    ```javascript
+    const uid = cred.user.uid;
+
+    // Store user profile in Firestore
+    const userProfile = {
+      email,
+      uid,
+      createdAt: serverTimestamp(),
+      ...additionalData,
+    };
+    await setDoc(doc(db, 'users', uid), userProfile, { merge: true });
+
+    return buildResponse(true, 'Registration successful', { uid, email });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function loginUser(email, password) {
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    return buildResponse(true, 'Login successful', {
+      uid: cred.user.uid,
+      email: cred.user.email,
+    });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function logoutUser() {
+  try {
+    await signOut(auth);
+    return buildResponse(true, 'Logout successful', null);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export function onAuthStateChanged(callback) {
+  // Returns unsubscribe function
+  return fbOnAuthStateChanged(auth, (user) => {
+    if (!user) {
+      callback(null);
+    } else {
+      callback({
+        uid: user.uid,
+        email: user.email,
+      });
+    }
+  });
+}
+
+export async function sendPasswordReset(email) {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    return buildResponse(true, 'Password reset email sent', null);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: feedback
+// --------------------------------------------------------------------------------
+export async function submitFeedback(formData) {
+  try {
+    const userId = auth.currentUser?.uid || null;
+    const payload = {
+      ...formData,
+      userId,
+      status: 'pending',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'feedback'), payload);
+    return buildResponse(true, 'Feedback submitted', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllFeedback() {
+  try {
+    // Intended for admin use; rely on Firestore security rules for access control
+    const q = query(
+      collection(db, 'feedback'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Feedback fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function updateFeedbackStatus(id, status) {
+  try {
+    await updateDoc(doc(db, 'feedback', id), {
+      status,
+      updatedAt: serverTimestamp(),
+    });
+    return buildResponse(true, 'Feedback status updated', { id, status });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: educationApplications
+// --------------------------------------------------------------------------------
+export async function submitEducationForm(data) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...data,
+      userId,
+      status: 'submitted',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'educationApplications'), payload);
+    return buildResponse(true, 'Application submitted', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getUserApplications(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'educationApplications'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Applications fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: appointments
+// --------------------------------------------------------------------------------
+export async function bookAppointment(data) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...data,
+      userId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'appointments'), payload);
+    return buildResponse(true, 'Appointment booked', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAppointments(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    // Sorting by a potential 'date' if present, else by createdAt
+    const q = query(
+      collection(db, 'appointments'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Appointments fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: digitalIDs
+// --------------------------------------------------------------------------------
+export async function fetchDigitalID(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const ref = doc(db, 'digitalIDs', safeUid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      return buildResponse(false, 'Digital ID not found', null);
+    }
+    return buildResponse(true, 'Digital ID fetched', { id: snap.id, ...snap.data() });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Officials Authentication API
+// --------------------------------------------------------------------------------
+export async function registerOfficial(email, password, additionalData = {}) {
+  try {
+    // Validate government email
+    const validDomains = ['gov.in', 'nic.in', 'ernet.in'];
+    const domain = email.split('@')[1];
+    const isValidDomain = validDomains.some(validDomain => domain?.endsWith(validDomain));
+    
+    if (!isValidDomain) {
+      return buildResponse(false, 'Invalid government email domain. Use .gov.in, .nic.in, or .ernet.in', null);
+    }
+
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const uid = cred.user.uid;
+
+    // Store official profile in separate collection
+    const officialProfile = {
+      email,
+      uid,
+      role: 'official',
+      department: additionalData.department || 'DigiGov Official',
+      name: additionalData.name || email.split('@')[0],
+      createdAt: serverTimestamp(),
+      ...additionalData,
+    };
+    await setDoc(doc(db, 'officials', uid), officialProfile, { merge: true });
+
+    return buildResponse(true, 'Official registration successful', { uid, email });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function loginOfficial(email, password) {
+  try {
+    // Validate government email
+    const validDomains = ['gov.in', 'nic.in', 'ernet.in'];
+    const domain = email.split('@')[1];
+    const isValidDomain = validDomains.some(validDomain => domain?.endsWith(validDomain));
+    
+    if (!isValidDomain) {
+      return buildResponse(false, 'Invalid government email domain', null);
+    }
+
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    const uid = cred.user.uid;
+
+    // Get official profile
+    const officialDoc = await getDoc(doc(db, 'officials', uid));
+    if (!officialDoc.exists()) {
+      // Create profile if doesn't exist
+      const officialProfile = {
+        email,
+        uid,
+        role: 'official',
+        department: 'DigiGov Official',
+        name: email.split('@')[0],
+        createdAt: serverTimestamp(),
+      };
+      await setDoc(doc(db, 'officials', uid), officialProfile);
+      return buildResponse(true, 'Login successful', { uid, email, ...officialProfile });
+    }
+
+    return buildResponse(true, 'Login successful', {
+      uid,
+      email: cred.user.email,
+      ...officialDoc.data(),
+    });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: Complaints
+// --------------------------------------------------------------------------------
+export async function submitComplaint(data) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...data,
+      userId,
+      status: 'Pending',
+      priority: data.priority || 'Medium',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      timeline: [
+        {
+          status: 'Submitted',
+          date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+          description: 'Complaint filed by citizen',
+        },
+      ],
+    };
+    const ref = await addDoc(collection(db, 'complaints'), payload);
+    return buildResponse(true, 'Complaint submitted successfully', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getComplaints(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'complaints'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Complaints fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllComplaints() {
+  try {
+    const q = query(
+      collection(db, 'complaints'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'All complaints fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function updateComplaintStatus(id, status, additionalData = {}) {
+  try {
+    const updateData = {
+      status,
+      updatedAt: serverTimestamp(),
+      ...additionalData,
+    };
+    
+    // Add to timeline if provided
+    if (additionalData.timelineEntry) {
+      const complaintDoc = await getDoc(doc(db, 'complaints', id));
+      if (complaintDoc.exists()) {
+        const currentTimeline = complaintDoc.data().timeline || [];
+        updateData.timeline = [...currentTimeline, additionalData.timelineEntry];
+        delete updateData.timelineEntry;
+      }
+    }
+
+    await updateDoc(doc(db, 'complaints', id), updateData);
+    return buildResponse(true, 'Complaint status updated', { id, status });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: Scheme Applications
+// --------------------------------------------------------------------------------
+export async function applyForScheme(data) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...data,
+      userId,
+      status: 'Pending',
+      eligibility: 'Under Review',
+      verificationStatus: 'Documents Pending Review',
+      appliedOn: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'schemeApplications'), payload);
+    return buildResponse(true, 'Scheme application submitted', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getSchemeApplications(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'schemeApplications'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Scheme applications fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllSchemeApplications() {
+  try {
+    const q = query(
+      collection(db, 'schemeApplications'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'All scheme applications fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function updateSchemeApplicationStatus(id, status, additionalData = {}) {
+  try {
+    await updateDoc(doc(db, 'schemeApplications', id), {
+      status,
+      updatedAt: serverTimestamp(),
+      ...additionalData,
+    });
+    return buildResponse(true, 'Application status updated', { id, status });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: Children
+// --------------------------------------------------------------------------------
+export async function addChild(data) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...data,
+      parentId: userId,
+      registeredDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'children'), payload);
+    return buildResponse(true, 'Child record added', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getChildren(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'children'),
+      where('parentId', '==', safeUid),
+      orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Children records fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllChildren() {
+  try {
+    const q = query(
+      collection(db, 'children'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'All children records fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function updateChild(id, data) {
+  try {
+    await updateDoc(doc(db, 'children', id), {
+      ...data,
+      updatedAt: serverTimestamp(),
+    });
+    return buildResponse(true, 'Child record updated', { id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function deleteChild(id) {
+  try {
+    await updateDoc(doc(db, 'children', id), {
+      deleted: true,
+      deletedAt: serverTimestamp(),
+    });
+    return buildResponse(true, 'Child record deleted', { id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: Documents
+// --------------------------------------------------------------------------------
+export async function uploadDocument(data) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...data,
+      userId,
+      status: 'Pending',
+      uploadedOn: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'documents'), payload);
+    return buildResponse(true, 'Document uploaded', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getDocuments(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'documents'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Documents fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllDocuments() {
+  try {
+    const q = query(
+      collection(db, 'documents'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'All documents fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function verifyDocument(id, verifiedBy) {
+  try {
+    await updateDoc(doc(db, 'documents', id), {
+      status: 'Verified',
+      verifiedBy,
+      verifiedOn: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+      updatedAt: serverTimestamp(),
+    });
+    return buildResponse(true, 'Document verified', { id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function rejectDocument(id, reason, rejectedBy) {
+  try {
+    await updateDoc(doc(db, 'documents', id), {
+      status: 'Rejected',
+      rejectionReason: reason,
+      verifiedBy: rejectedBy,
+      verifiedOn: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+      updatedAt: serverTimestamp(),
+    });
+    return buildResponse(true, 'Document rejected', { id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: Bill Payments
+// --------------------------------------------------------------------------------
+export async function recordBillPayment(data) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...data,
+      userId,
+      paidDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'billPayments'), payload);
+    return buildResponse(true, 'Bill payment recorded', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getBillPayments(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'billPayments'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Bill payments fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllBillPayments() {
+  try {
+    const q = query(
+      collection(db, 'billPayments'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'All bill payments fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: Health Services (Blood & Organ Donation)
+// --------------------------------------------------------------------------------
+export async function registerDonor(data) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...data,
+      userId,
+      status: 'Active',
+      registeredOn: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'donors'), payload);
+    return buildResponse(true, 'Donor registration successful', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function submitHealthRequest(data) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...data,
+      userId,
+      status: 'Pending',
+      matchedDonors: 0,
+      requestedOn: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'healthRequests'), payload);
+    return buildResponse(true, 'Health request submitted', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getDonors(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'donors'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Donor registrations fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllDonors() {
+  try {
+    const q = query(
+      collection(db, 'donors'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'All donors fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getHealthRequests(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'healthRequests'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Health requests fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllHealthRequests() {
+  try {
+    const q = query(
+      collection(db, 'healthRequests'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'All health requests fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function updateHealthRequestStatus(id, status, additionalData = {}) {
+  try {
+    await updateDoc(doc(db, 'healthRequests', id), {
+      status,
+      updatedAt: serverTimestamp(),
+      ...additionalData,
+    });
+    return buildResponse(true, 'Health request status updated', { id, status });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: Admin Queries (for Official Dashboard)
+// --------------------------------------------------------------------------------
+export async function getAllUsers() {
+  try {
+    const q = query(
+      collection(db, 'users'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'All users fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Real-time Listeners
+// --------------------------------------------------------------------------------
+import { onSnapshot } from 'firebase/firestore';
+
+export function onComplaintsChange(callback) {
+  const q = query(
+    collection(db, 'complaints'),
+    orderBy('createdAt', 'desc'),
+    limit(500)
+  );
+  return onSnapshot(q, (snapshot) => {
+    const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    callback(items);
+  }, (error) => {
+    console.error('[Firebase] Complaints listener error:', parseFirebaseError(error));
+  });
+}
+
+export function onApplicationsChange(callback) {
+  const q = query(
+    collection(db, 'schemeApplications'),
+    orderBy('createdAt', 'desc'),
+    limit(500)
+  );
+  return onSnapshot(q, (snapshot) => {
+    const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    callback(items);
+  }, (error) => {
+    console.error('[Firebase] Applications listener error:', parseFirebaseError(error));
+  });
+}
+
+export function onFeedbackChange(callback) {
+  const q = query(
+    collection(db, 'feedback'),
+    orderBy('createdAt', 'desc'),
+    limit(500)
+  );
+  return onSnapshot(q, (snapshot) => {
+    const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    callback(items);
+  }, (error) => {
+    console.error('[Firebase] Feedback listener error:', parseFirebaseError(error));
+  });
+}
+
+export function onDocumentsChange(callback) {
+  const q = query(
+    collection(db, 'documents'),
+    orderBy('createdAt', 'desc'),
+    limit(500)
+  );
+  return onSnapshot(q, (snapshot) => {
+    const items = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+    callback(items);
+  }, (error) => {
+    console.error('[Firebase] Documents listener error:', parseFirebaseError(error));
+  });
+}
+
+// Optional: export a minimal read-only helper for diagnostics if needed
+export const firebaseInternal = {
+  // Not for external Firebase usage; exposed for potential diagnostics only
+  getCurrentUser: () => (auth.currentUser ? { uid: auth.currentUser.uid, email: auth.currentUser.email } : null),
+};
+```
