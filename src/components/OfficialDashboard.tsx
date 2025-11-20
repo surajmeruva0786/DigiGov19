@@ -710,8 +710,6 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
     },
   ];
 
-  ];
-
   // Mock feedbackData removed - using state variable initialized above
 
 
