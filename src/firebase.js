@@ -942,3 +942,244 @@ export async function getAllUsers() {
     return buildResponse(false, parseFirebaseError(error), null);
   }
 }
+
+// --------------------------------------------------------------------------------
+// Firestore: donorRegistrations
+// --------------------------------------------------------------------------------
+
+export async function registerDonor(donorData) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...donorData,
+      userId,
+      status: 'Active',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'donorRegistrations'), payload);
+    return buildResponse(true, 'Donor registration successful', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getUserDonorRegistrations(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'donorRegistrations'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Donor registrations fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllDonorRegistrations() {
+  try {
+    const q = query(
+      collection(db, 'donorRegistrations'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    const itemsWithUserDetails = await Promise.all(
+      items.map(async (item) => {
+        if (item.userId) {
+          const userProfile = await getUserProfile(item.userId);
+          if (userProfile) {
+            return {
+              ...item,
+              userName: userProfile.name || userProfile.fullName || 'Unknown',
+              userPhone: userProfile.phone || userProfile.phoneNumber || 'N/A',
+              userEmail: userProfile.email || 'N/A',
+            };
+          }
+        }
+        return item;
+      })
+    );
+
+    return buildResponse(true, 'All donor registrations fetched', itemsWithUserDetails);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: healthRequests
+// --------------------------------------------------------------------------------
+
+export async function submitHealthRequest(requestData) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...requestData,
+      userId,
+      status: 'Pending',
+      matchedDonors: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'healthRequests'), payload);
+    return buildResponse(true, 'Health request submitted successfully', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getUserHealthRequests(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'healthRequests'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Health requests fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllHealthRequests() {
+  try {
+    const q = query(
+      collection(db, 'healthRequests'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    const itemsWithUserDetails = await Promise.all(
+      items.map(async (item) => {
+        if (item.userId) {
+          const userProfile = await getUserProfile(item.userId);
+          if (userProfile) {
+            return {
+              ...item,
+              userName: userProfile.name || userProfile.fullName || 'Unknown',
+              userPhone: userProfile.phone || userProfile.phoneNumber || 'N/A',
+              userEmail: userProfile.email || 'N/A',
+            };
+          }
+        }
+        return item;
+      })
+    );
+
+    return buildResponse(true, 'All health requests fetched', itemsWithUserDetails);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function updateHealthRequestStatus(id, status, matchedDonors = 0) {
+  try {
+    await updateDoc(doc(db, 'healthRequests', id), {
+      status,
+      matchedDonors,
+      updatedAt: serverTimestamp(),
+    });
+    return buildResponse(true, 'Health request status updated', { id, status, matchedDonors });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: scholarshipApplications
+// --------------------------------------------------------------------------------
+
+export async function submitScholarshipApplication(data) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...data,
+      userId,
+      status: 'Pending Verification',
+      remarks: '',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'scholarshipApplications'), payload);
+    return buildResponse(true, 'Scholarship application submitted successfully', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getUserScholarshipApplications(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'scholarshipApplications'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Scholarship applications fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllScholarshipApplications() {
+  try {
+    const q = query(
+      collection(db, 'scholarshipApplications'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    const itemsWithUserDetails = await Promise.all(
+      items.map(async (item) => {
+        if (item.userId) {
+          const userProfile = await getUserProfile(item.userId);
+          if (userProfile) {
+            return {
+              ...item,
+              parentName: userProfile.name || userProfile.fullName || 'Unknown',
+              parentPhone: userProfile.phone || userProfile.phoneNumber || 'N/A',
+              parentEmail: userProfile.email || 'N/A',
+            };
+          }
+        }
+        return item;
+      })
+    );
+
+    return buildResponse(true, 'All scholarship applications fetched', itemsWithUserDetails);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function updateScholarshipStatus(id, status, remarks = '') {
+  try {
+    await updateDoc(doc(db, 'scholarshipApplications', id), {
+      status,
+      remarks,
+      updatedAt: serverTimestamp(),
+    });
+    return buildResponse(true, 'Scholarship status updated', { id, status, remarks });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}

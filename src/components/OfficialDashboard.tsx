@@ -82,6 +82,12 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
   const [isLoadingPayments, setIsLoadingPayments] = useState(true);
   const [userSignupsData, setUserSignupsData] = useState<any[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+  const [donorRegistrationsData, setDonorRegistrationsData] = useState<any[]>([]);
+  const [healthRequestsData, setHealthRequestsData] = useState<any[]>([]);
+  const [scholarshipApplicationsData, setScholarshipApplicationsData] = useState<any[]>([]);
+  const [isLoadingDonors, setIsLoadingDonors] = useState(true);
+  const [isLoadingHealthRequests, setIsLoadingHealthRequests] = useState(true);
+  const [isLoadingScholarships, setIsLoadingScholarships] = useState(true);
 
   // Fetch data from Firestore
   useEffect(() => {
@@ -96,7 +102,10 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       fetchSchemeApplications(),
       fetchChildrenData(),
       fetchPayments(),
-      fetchUsers()
+      fetchUsers(),
+      fetchDonorRegistrations(),
+      fetchHealthRequests(),
+      fetchScholarshipApplications()
     ]);
   };
 
@@ -357,6 +366,101 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       console.error('Error fetching users:', error);
     } finally {
       setIsLoadingUsers(false);
+    }
+  };
+
+  const fetchDonorRegistrations = async () => {
+    setIsLoadingDonors(true);
+    try {
+      const { getAllDonorRegistrations } = await import('../firebase');
+      const result = await getAllDonorRegistrations();
+
+      if (result.success && result.data.length > 0) {
+        const transformed = result.data.map((donor: any) => ({
+          id: `DNR-${donor.id.slice(-3)}`,
+          donorType: donor.donorType === 'blood' ? 'Blood' : 'Organ',
+          donorName: donor.fullName || 'Unknown',
+          fullName: donor.fullName || 'Unknown',
+          bloodGroup: donor.bloodGroup || 'N/A',
+          age: donor.age || 'N/A',
+          contact: donor.contact || 'N/A',
+          location: donor.location || 'N/A',
+          availability: donor.availability || 'N/A',
+          status: donor.status || 'Active',
+          registeredOn: donor.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || 'Recent',
+          userName: donor.userName || 'Unknown',
+          userPhone: donor.userPhone || 'N/A',
+          userEmail: donor.userEmail || 'N/A',
+        }));
+        setDonorRegistrationsData(transformed);
+      }
+    } catch (error) {
+      console.error('Error fetching donor registrations:', error);
+    } finally {
+      setIsLoadingDonors(false);
+    }
+  };
+
+  const fetchHealthRequests = async () => {
+    setIsLoadingHealthRequests(true);
+    try {
+      const { getAllHealthRequests } = await import('../firebase');
+      const result = await getAllHealthRequests();
+
+      if (result.success && result.data.length > 0) {
+        const transformed = result.data.map((request: any) => ({
+          id: `HRQ-${request.id.slice(-3)}`,
+          requestType: request.requestType === 'blood' ? 'Blood' : 'Organ',
+          patientName: request.patientName || 'Unknown',
+          bloodGroupNeeded: request.bloodGroupNeeded || 'N/A',
+          organType: request.organType || 'N/A',
+          hospital: request.hospital || 'N/A',
+          urgency: request.urgency || 'Medium',
+          requiredBy: request.requiredBy || 'N/A',
+          status: request.status || 'Pending',
+          matchedDonors: request.matchedDonors || 0,
+          requestedDate: request.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || 'Recent',
+          userName: request.userName || 'Unknown',
+          userPhone: request.userPhone || 'N/A',
+          userEmail: request.userEmail || 'N/A',
+        }));
+        setHealthRequestsData(transformed);
+      }
+    } catch (error) {
+      console.error('Error fetching health requests:', error);
+    } finally {
+      setIsLoadingHealthRequests(false);
+    }
+  };
+
+  const fetchScholarshipApplications = async () => {
+    setIsLoadingScholarships(true);
+    try {
+      const { getAllScholarshipApplications } = await import('../firebase');
+      const result = await getAllScholarshipApplications();
+
+      if (result.success && result.data.length > 0) {
+        const transformed = result.data.map((app: any) => ({
+          id: `SCH-${app.id.slice(-3)}`,
+          student: app.studentName || 'Unknown',
+          parent: app.parentName || 'Unknown',
+          scholarship: app.scholarshipName || 'Unknown Scholarship',
+          amount: `₹${app.amount || 'N/A'}`,
+          academicPercentage: `${app.academicPercentage || 'N/A'}%`,
+          class: app.class || 'N/A',
+          school: app.school || 'N/A',
+          status: app.status || 'Pending Verification',
+          remarks: app.remarks || '',
+          appliedOn: app.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || 'Recent',
+          parentPhone: app.parentPhone || 'N/A',
+          parentEmail: app.parentEmail || 'N/A',
+        }));
+        setScholarshipApplicationsData(transformed);
+      }
+    } catch (error) {
+      console.error('Error fetching scholarship applications:', error);
+    } finally {
+      setIsLoadingScholarships(false);
     }
   };
 
@@ -1712,7 +1816,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {donorRegistrations.map((donor) => (
+                            {(donorRegistrationsData.length > 0 ? donorRegistrationsData : donorRegistrations).map((donor: any) => (
                               <TableRow
                                 key={donor.id}
                                 className="cursor-pointer hover:bg-blue-50 transition-colors"
@@ -1984,59 +2088,47 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
                           <TableHead>Parent</TableHead>
                           <TableHead>Scholarship</TableHead>
                           <TableHead>Amount</TableHead>
-                          <TableHead>Percentage</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
+                          <TableCell className="font-medium">{sch.id}</TableCell>
+                          <TableCell>{sch.student}</TableCell>
+                          <TableCell>{sch.parent}</TableCell>
+                          <TableCell>{sch.scholarship}</TableCell>
+                          <TableCell className="font-medium text-green-600">{sch.amount}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{sch.academicPercentage}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(sch.status)}>{sch.status}</Badge>
+                          </TableCell>
+                          <TableCell onClick={(e) => e.stopPropagation()}>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleRowClick(sch, 'Scholarship')}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Select
+                                value={sch.status}
+                                onValueChange={(value) => {
+                                  toast.success(`Scholarship status updated to ${value}`);
+                                }}
+                              >
+                                <SelectTrigger className="w-[160px] h-8">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Pending Verification">Pending Verification</SelectItem>
+                                  <SelectItem value="Under Review">Under Review</SelectItem>
+                                  <SelectItem value="Verified">Verified</SelectItem>
+                                  <SelectItem value="Approved">Approved</SelectItem>
+                                  <SelectItem value="Rejected">Rejected</SelectItem>
+                                  <SelectItem value="Disbursed">Disbursed</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {scholarshipApplications.map((sch) => (
-                          <TableRow
-                            key={sch.id}
-                            className="cursor-pointer hover:bg-blue-50 transition-colors"
-                            onClick={() => handleRowClick(sch, 'Scholarship')}
-                          >
-                            <TableCell className="font-medium">{sch.id}</TableCell>
-                            <TableCell>{sch.student}</TableCell>
-                            <TableCell>{sch.parent}</TableCell>
-                            <TableCell>{sch.scholarship}</TableCell>
-                            <TableCell className="font-medium text-green-600">{sch.amount}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{sch.academicPercentage}</Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={getStatusColor(sch.status)}>{sch.status}</Badge>
-                            </TableCell>
-                            <TableCell onClick={(e) => e.stopPropagation()}>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleRowClick(sch, 'Scholarship')}
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                                <Select
-                                  value={sch.status}
-                                  onValueChange={(value) => {
-                                    toast.success(`Scholarship status updated to ${value}`);
-                                  }}
-                                >
-                                  <SelectTrigger className="w-[160px] h-8">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="Pending Verification">Pending Verification</SelectItem>
-                                    <SelectItem value="Under Review">Under Review</SelectItem>
-                                    <SelectItem value="Verified">Verified</SelectItem>
-                                    <SelectItem value="Approved">Approved</SelectItem>
-                                    <SelectItem value="Rejected">Rejected</SelectItem>
-                                    <SelectItem value="Disbursed">Disbursed</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </TableCell>
-                          </TableRow>
                         ))}
                       </TableBody>
                     </Table>

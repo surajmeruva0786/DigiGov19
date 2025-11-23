@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, GraduationCap, IndianRupee, ChevronDown, ChevronUp, Upload, FileText, MessageSquareText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from './ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { toast } from 'sonner@2.0.3';
+import { submitScholarshipApplication, getUserScholarshipApplications } from '../firebase';
 
 interface EducationAssistanceProps {
   userName?: string;
@@ -37,6 +38,9 @@ export function EducationAssistance({ userName = 'Rajesh Kumar', onNavigate, onT
   const [selectedScholarship, setSelectedScholarship] = useState<Scholarship | null>(null);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const [applicationFilter, setApplicationFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [myApplications, setMyApplications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const scholarships: Scholarship[] = [
     {
@@ -113,26 +117,24 @@ export function EducationAssistance({ userName = 'Rajesh Kumar', onNavigate, onT
     },
   ];
 
-  const myApplications = [
-    {
-      id: 1,
-      scholarshipName: 'National Merit Scholarship',
-      appliedOn: 'Oct 15, 2025',
-      status: 'Pending',
-    },
-    {
-      id: 2,
-      scholarshipName: 'Girls Education Scholarship',
-      appliedOn: 'Sep 10, 2025',
-      status: 'Approved',
-    },
-    {
-      id: 3,
-      scholarshipName: 'Economic Support Program',
-      appliedOn: 'Aug 20, 2025',
-      status: 'Rejected',
-    },
-  ];
+  // Fetch user's scholarship applications on mount
+  useEffect(() => {
+    fetchApplications();
+  }, []);
+
+  const fetchApplications = async () => {
+    setLoading(true);
+    try {
+      const result = await getUserScholarshipApplications();
+      if (result.success) {
+        setMyApplications(result.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching scholarship applications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -165,10 +167,51 @@ export function EducationAssistance({ userName = 'Rajesh Kumar', onNavigate, onT
     setShowApplicationModal(true);
   };
 
-  const handleSubmitApplication = (e: React.FormEvent) => {
+  const handleSubmitApplication = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowApplicationModal(false);
-    toast.success('Scholarship application submitted successfully!');
+    if (!selectedScholarship) return;
+
+    setSubmitting(true);
+    const formData = new FormData(e.target as HTMLFormElement);
+
+    const applicationData = {
+      scholarshipId: selectedScholarship.id,
+      scholarshipName: selectedScholarship.name,
+      scholarshipType: selectedScholarship.category,
+      studentName: formData.get('student-name') as string,
+      studentEmail: formData.get('student-email') as string,
+      studentPhone: formData.get('student-phone') as string,
+      dateOfBirth: formData.get('student-dob') as string,
+      class: formData.get('class-year') as string,
+      school: formData.get('institution') as string,
+      academicPercentage: formData.get('percentage') as string,
+      course: formData.get('course') as string,
+      familyIncome: formData.get('family-income') as string,
+      category: formData.get('category') as string,
+      documents: {
+        marksheetLink: formData.get('marksheets') as string,
+        incomeLink: formData.get('income-cert') as string,
+        bonafideLink: formData.get('category-cert') as string || '',
+      },
+      statementOfPurpose: formData.get('sop') as string,
+    };
+
+    try {
+      const result = await submitScholarshipApplication(applicationData);
+      if (result.success) {
+        toast.success('Scholarship application submitted successfully!');
+        setShowApplicationModal(false);
+        setSelectedScholarship(null);
+        await fetchApplications(); // Refresh applications
+      } else {
+        toast.error(result.message || 'Failed to submit application');
+      }
+    } catch (error) {
+      toast.error('An error occurred while submitting the application');
+      console.error('Error submitting scholarship application:', error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const filteredApplications = myApplications.filter((app) => {
@@ -200,9 +243,9 @@ export function EducationAssistance({ userName = 'Rajesh Kumar', onNavigate, onT
             </div>
             {onToggleChatbot && (
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="relative hover:bg-white/50"
                   onClick={onToggleChatbot}
                 >
@@ -470,30 +513,30 @@ export function EducationAssistance({ userName = 'Rajesh Kumar', onNavigate, onT
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="marksheets">Mark Sheets Link *</Label>
-                  <Input 
-                    id="marksheets" 
-                    type="url" 
-                    placeholder="https://drive.google.com/file/d/..." 
-                    required 
+                  <Input
+                    id="marksheets"
+                    type="url"
+                    placeholder="https://drive.google.com/file/d/..."
+                    required
                   />
                   <p className="text-xs text-gray-500">Paste Google Drive shareable link for latest marksheet</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="income-cert">Income Certificate Link *</Label>
-                  <Input 
-                    id="income-cert" 
-                    type="url" 
-                    placeholder="https://drive.google.com/file/d/..." 
-                    required 
+                  <Input
+                    id="income-cert"
+                    type="url"
+                    placeholder="https://drive.google.com/file/d/..."
+                    required
                   />
                   <p className="text-xs text-gray-500">Paste Google Drive shareable link for income certificate</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category-cert">Category Certificate Link (if applicable)</Label>
-                  <Input 
-                    id="category-cert" 
-                    type="url" 
-                    placeholder="https://drive.google.com/file/d/..." 
+                  <Input
+                    id="category-cert"
+                    type="url"
+                    placeholder="https://drive.google.com/file/d/..."
                   />
                   <p className="text-xs text-gray-500">Paste Google Drive shareable link for caste/category certificate (Optional)</p>
                 </div>

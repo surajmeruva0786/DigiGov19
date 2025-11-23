@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Droplet, Heart, AlertCircle, MessageSquareText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Textarea } from './ui/textarea';
 import { toast } from 'sonner@2.0.3';
+import { registerDonor, getUserDonorRegistrations, submitHealthRequest, getUserHealthRequests } from '../firebase';
 
 interface HealthServicesProps {
   userName?: string;
@@ -23,47 +24,106 @@ export function HealthServices({ userName = 'Rajesh Kumar', onNavigate, onToggle
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [donorType, setDonorType] = useState<'blood' | 'organ'>('blood');
   const [requestType, setRequestType] = useState<'blood' | 'organ'>('blood');
+  const [myDonations, setMyDonations] = useState<any[]>([]);
+  const [myRequests, setMyRequests] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Sample data
-  const myDonations = [
-    {
-      type: 'Blood',
-      date: 'Oct 15, 2025',
-      status: 'Completed',
-      location: 'City General Hospital',
-    },
-    {
-      type: 'Blood',
-      date: 'Jul 20, 2025',
-      status: 'Completed',
-      location: 'Red Cross Center',
-    },
-  ];
+  // Fetch user's donations and requests on mount
+  useEffect(() => {
+    fetchUserData();
+  }, []);
 
-  const myRequests = [
-    {
-      type: 'Blood (O+)',
-      requestedOn: 'Nov 1, 2025',
-      status: 'Pending',
-      priority: 'High',
-    },
-  ];
+  const fetchUserData = async () => {
+    setLoading(true);
+    try {
+      const [donationsResult, requestsResult] = await Promise.all([
+        getUserDonorRegistrations(),
+        getUserHealthRequests()
+      ]);
+
+      if (donationsResult.success) {
+        setMyDonations(donationsResult.data || []);
+      }
+      if (requestsResult.success) {
+        setMyRequests(requestsResult.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching health data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   const cities = ['New Delhi', 'Mumbai', 'Bangalore', 'Chennai', 'Kolkata', 'Hyderabad', 'Pune', 'Ahmedabad'];
   const availabilityOptions = ['Immediately', 'Within a week', 'Within a month', 'On request only'];
   const urgencyLevels = ['Critical', 'High', 'Medium'];
 
-  const handleDonorSubmit = (e: React.FormEvent) => {
+  const handleDonorSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowDonorModal(false);
-    toast.success(`Successfully registered as ${donorType} donor!`);
+    setSubmitting(true);
+    const formData = new FormData(e.target as HTMLFormElement);
+
+    const donorData = {
+      donorType,
+      fullName: formData.get('donor-name') as string,
+      bloodGroup: formData.get('blood-group') as string,
+      age: parseInt(formData.get('donor-age') as string),
+      contact: formData.get('donor-contact') as string,
+      location: formData.get('donor-location') as string,
+      availability: formData.get('donor-availability') as string,
+      medicalHistory: formData.get('medical-history') as string || '',
+    };
+
+    try {
+      const result = await registerDonor(donorData);
+      if (result.success) {
+        toast.success(`Successfully registered as ${donorType} donor!`);
+        setShowDonorModal(false);
+        await fetchUserData(); // Refresh data
+      } else {
+        toast.error(result.message || 'Failed to register as donor');
+      }
+    } catch (error) {
+      toast.error('An error occurred while registering');
+      console.error('Error registering donor:', error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleRequestSubmit = (e: React.FormEvent) => {
+  const handleRequestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowRequestModal(false);
-    toast.success(`${requestType === 'blood' ? 'Blood' : 'Organ'} request submitted successfully!`);
+    setSubmitting(true);
+    const formData = new FormData(e.target as HTMLFormElement);
+
+    const requestData = {
+      requestType,
+      patientName: formData.get('patient-name') as string,
+      bloodGroupNeeded: requestType === 'blood' ? formData.get('blood-group-needed') as string : null,
+      organType: requestType === 'organ' ? formData.get('blood-group-needed') as string : null,
+      hospital: formData.get('hospital') as string,
+      urgency: formData.get('urgency') as string,
+      requiredBy: formData.get('required-by') as string,
+      additionalNotes: formData.get('request-notes') as string || '',
+    };
+
+    try {
+      const result = await submitHealthRequest(requestData);
+      if (result.success) {
+        toast.success(`${requestType === 'blood' ? 'Blood' : 'Organ'} request submitted successfully!`);
+        setShowRequestModal(false);
+        await fetchUserData(); // Refresh data
+      } else {
+        toast.error(result.message || 'Failed to submit request');
+      }
+    } catch (error) {
+      toast.error('An error occurred while submitting request');
+      console.error('Error submitting request:', error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const openDonorModal = (type: 'blood' | 'organ') => {
@@ -124,9 +184,9 @@ export function HealthServices({ userName = 'Rajesh Kumar', onNavigate, onToggle
             </div>
             {onToggleChatbot && (
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="relative hover:bg-white/50"
                   onClick={onToggleChatbot}
                 >
@@ -357,7 +417,7 @@ export function HealthServices({ userName = 'Rajesh Kumar', onNavigate, onToggle
               {donorType === 'blood' ? '🩸 Register as Blood Donor' : '🫀 Register as Organ Donor'}
             </DialogTitle>
             <DialogDescription>
-              {donorType === 'blood' 
+              {donorType === 'blood'
                 ? 'Fill out the form below to register as a blood donor and help save lives.'
                 : 'Fill out the form below to pledge organ donation and give the gift of life.'}
             </DialogDescription>

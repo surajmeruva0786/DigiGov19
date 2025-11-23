@@ -151,7 +151,7 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
     setSubmitting(true);
     const formData = new FormData(e.target as HTMLFormElement);
 
-    const applicationData = {
+    const applicationData: any = {
       schemeId: selectedScheme.id,
       schemeName: selectedScheme.name,
       schemeType: selectedScheme.type,
@@ -167,18 +167,6 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
         state: formData.get('state') as string,
         pincode: formData.get('pincode') as string,
       },
-      financialInfo: selectedScheme.type === 'Financial' || selectedScheme.type === 'Education' ? {
-        familyIncome: formData.get('family-income') as string,
-        category: formData.get('category') as string,
-        bankAccount: formData.get('bank-account') as string,
-        ifsc: formData.get('ifsc') as string,
-      } : {},
-      educationalInfo: selectedScheme.type === 'Education' ? {
-        institution: formData.get('institution') as string,
-        course: formData.get('course') as string,
-        year: formData.get('year') as string,
-        percentage: formData.get('percentage') as string,
-      } : {},
       documents: {
         aadhaarLink: formData.get('aadhaar-link') as string,
         incomeLink: formData.get('income-link') as string,
@@ -186,6 +174,26 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
       },
       reason: formData.get('reason') as string,
     };
+
+    // Only include financialInfo if scheme type requires it and has data
+    if (selectedScheme.type === 'Financial' || selectedScheme.type === 'Education') {
+      applicationData.financialInfo = {
+        familyIncome: formData.get('family-income') as string,
+        category: formData.get('category') as string,
+        bankAccount: formData.get('bank-account') as string,
+        ifsc: formData.get('ifsc') as string,
+      };
+    }
+
+    // Only include educationalInfo if scheme type is Education and has data
+    if (selectedScheme.type === 'Education') {
+      applicationData.educationalInfo = {
+        institution: formData.get('institution') as string,
+        course: formData.get('course') as string,
+        year: formData.get('year') as string,
+        percentage: formData.get('percentage') as string,
+      };
+    }
 
     try {
       const result = await submitSchemeApplication(applicationData);
