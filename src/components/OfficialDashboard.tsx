@@ -74,6 +74,14 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
   const [complaints, setComplaints] = useState<any[]>([]);
   const [documents, setDocuments] = useState<any[]>([]);
   const [feedbackData, setFeedbackData] = useState<any[]>([]);
+  const [schemeApplicationsData, setSchemeApplicationsData] = useState<any[]>([]);
+  const [childrenDataState, setChildrenDataState] = useState<any[]>([]);
+  const [paymentsData, setPaymentsData] = useState<any[]>([]);
+  const [isLoadingSchemes, setIsLoadingSchemes] = useState(true);
+  const [isLoadingChildren, setIsLoadingChildren] = useState(true);
+  const [isLoadingPayments, setIsLoadingPayments] = useState(true);
+  const [userSignupsData, setUserSignupsData] = useState<any[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
 
   // Fetch data from Firestore
   useEffect(() => {
@@ -84,7 +92,11 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
     await Promise.all([
       fetchComplaints(),
       fetchDocuments(),
-      fetchFeedback()
+      fetchFeedback(),
+      fetchSchemeApplications(),
+      fetchChildrenData(),
+      fetchPayments(),
+      fetchUsers()
     ]);
   };
 
@@ -192,6 +204,159 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
       console.error('Error fetching feedback:', error);
     } finally {
       setIsLoadingFeedback(false);
+    }
+  };
+
+  const fetchSchemeApplications = async () => {
+    setIsLoadingSchemes(true);
+    try {
+      const { getAllSchemeApplications } = await import('../firebase');
+      const result = await getAllSchemeApplications();
+
+      if (result.success && result.data.length > 0) {
+        const transformed = result.data.map((app: any) => ({
+          id: `APP-${app.id.slice(-3)}`,
+          fullName: app.applicantDetails?.fullName || 'Unknown',
+          email: app.applicantDetails?.email || 'N/A',
+          phone: app.applicantDetails?.phone || 'N/A',
+          dob: app.applicantDetails?.dob || 'N/A',
+          gender: app.applicantDetails?.gender || 'N/A',
+          aadhaar: app.applicantDetails?.aadhaar || 'N/A',
+          address: app.applicantDetails?.address || '',
+          city: app.applicantDetails?.city || '',
+          state: app.applicantDetails?.state || '',
+          pincode: app.applicantDetails?.pincode || '',
+          fullAddress: `${app.applicantDetails?.address || ''}, ${app.applicantDetails?.city || ''}, ${app.applicantDetails?.state || ''} - ${app.applicantDetails?.pincode || ''}`,
+          scheme: app.schemeName || 'Unknown Scheme',
+          schemeType: app.schemeType || 'General',
+          annualIncome: app.financialInfo?.familyIncome || 'N/A',
+          category: app.financialInfo?.category || 'N/A',
+          bankAccount: app.financialInfo?.bankAccount || 'N/A',
+          ifsc: app.financialInfo?.ifsc || 'N/A',
+          institution: app.educationalInfo?.institution || '',
+          course: app.educationalInfo?.course || '',
+          year: app.educationalInfo?.year || '',
+          percentage: app.educationalInfo?.percentage || '',
+          documents: [
+            { name: 'Aadhaar Card', link: app.documents?.aadhaarLink || '' },
+            { name: 'Income Certificate', link: app.documents?.incomeLink || '' },
+            { name: 'Address Proof', link: app.documents?.addressLink || '' }
+          ].filter(doc => doc.link),
+          reason: app.reason || '',
+          appliedOn: app.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || 'Recent',
+          status: app.status || 'Pending',
+          eligibility: 'Pending Review',
+          verificationStatus: app.remarks || 'Pending Review',
+        }));
+        setSchemeApplicationsData(transformed);
+      }
+    } catch (error) {
+      console.error('Error fetching scheme applications:', error);
+    } finally {
+      setIsLoadingSchemes(false);
+    }
+  };
+
+  const fetchChildrenData = async () => {
+    setIsLoadingChildren(true);
+    try {
+      const { getAllChildren } = await import('../firebase');
+      const result = await getAllChildren();
+
+      if (result.success && result.data.length > 0) {
+        const transformed = result.data.map((child: any) => ({
+          id: `CHD-${child.id.slice(-3)}`,
+          name: child.name || 'Unknown',
+          parent: child.parentName || 'Unknown',
+          parentPhone: child.parentPhone || 'N/A',
+          parentEmail: child.parentEmail || 'N/A',
+          age: child.age ? `${child.age} years` : 'N/A',
+          dob: child.dateOfBirth || 'N/A',
+          gender: 'N/A',
+          school: child.school || 'N/A',
+          class: child.grade || 'N/A',
+          aadhaar: 'N/A',
+          documents: 0,
+          vaccinations: child.vaccinations || [],
+          medicalRecords: child.healthRecords || 'N/A',
+          registeredDate: child.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || 'Recent',
+        }));
+        setChildrenDataState(transformed);
+      }
+    } catch (error) {
+      console.error('Error fetching children data:', error);
+    } finally {
+      setIsLoadingChildren(false);
+    }
+  };
+
+  const fetchPayments = async () => {
+    setIsLoadingPayments(true);
+    try {
+      const { getAllPayments } = await import('../firebase');
+      const result = await getAllPayments();
+
+      if (result.success && result.data.length > 0) {
+        const transformed = result.data.map((payment: any) => ({
+          id: `BILL-${payment.id.slice(-3)}`,
+          user: payment.userName || 'Unknown',
+          userId: payment.userId,
+          userPhone: payment.userPhone || 'N/A',
+          userAddress: 'N/A',
+          type: payment.billType || 'Unknown',
+          billNumber: `${payment.billType?.toUpperCase()}-${payment.id.slice(-6)}`,
+          amount: `₹${payment.amount?.toLocaleString('en-IN') || '0'}`,
+          dueDate: 'N/A',
+          paidDate: payment.date || payment.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || 'Recent',
+          paymentMode: payment.paymentMethod || 'UPI',
+          transactionId: payment.transactionId || 'N/A',
+          status: payment.status || 'Pending',
+          billingPeriod: 'N/A',
+          consumerNumber: payment.consumerNumber || 'N/A',
+          upiApp: payment.upiApp || 'N/A',
+        }));
+        setPaymentsData(transformed);
+      }
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+    } finally {
+      setIsLoadingPayments(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    setIsLoadingUsers(true);
+    try {
+      const { getAllUsers } = await import('../firebase');
+      const result = await getAllUsers();
+
+      if (result.success && result.data.length > 0) {
+        const transformed = result.data.map((user: any) => ({
+          id: `USR-${user.id.slice(-3)}`,
+          name: user.name || user.fullName || 'Unknown',
+          aadhaar: user.aadhaar ? `XXXX-XXXX-${user.aadhaar.slice(-4)}` : 'N/A',
+          fullAadhaar: user.aadhaar || 'N/A',
+          phone: user.phone || user.phoneNumber || 'N/A',
+          email: user.email || 'N/A',
+          dob: user.dob || user.dateOfBirth || 'N/A',
+          gender: user.gender || 'N/A',
+          address: user.address || 'N/A',
+          city: user.city || 'N/A',
+          state: user.state || 'N/A',
+          pincode: user.pincode || 'N/A',
+          fullAddress: `${user.address || ''}, ${user.city || ''}, ${user.state || ''} - ${user.pincode || ''}`,
+          aadhaarPhotoLink: user.aadhaarPhotoLink || user.aadhaarLink || '',
+          registeredDate: user.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) || 'Recent',
+          services: [],
+          documents: 0,
+          verificationStatus: user.verified ? 'Verified' : 'Pending',
+        }));
+        setUserSignupsData(transformed);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setIsLoadingUsers(false);
     }
   };
 
@@ -1014,7 +1179,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {userSignups.map((user) => (
+                        {(userSignupsData.length > 0 ? userSignupsData : userSignups).map((user) => (
                           <TableRow
                             key={user.id}
                             className="cursor-pointer hover:bg-blue-50 transition-colors"
@@ -1088,7 +1253,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {schemeApplications.map((app) => (
+                        {(schemeApplicationsData.length > 0 ? schemeApplicationsData : schemeApplications).map((app) => (
                           <TableRow
                             key={app.id}
                             className="cursor-pointer hover:bg-blue-50 transition-colors"
@@ -1254,7 +1419,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {childrenData.map((child) => (
+                        {(childrenDataState.length > 0 ? childrenDataState : childrenData).map((child) => (
                           <TableRow
                             key={child.id}
                             className="cursor-pointer hover:bg-blue-50 transition-colors"
@@ -1394,7 +1559,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {billPayments.map((bill) => (
+                        {(paymentsData.length > 0 ? paymentsData : billPayments).map((bill) => (
                           <TableRow
                             key={bill.id}
                             className="cursor-pointer hover:bg-blue-50 transition-colors"

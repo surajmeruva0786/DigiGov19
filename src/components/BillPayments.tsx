@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft,
@@ -14,6 +14,7 @@ import {
   Calendar,
   Filter,
   MessageSquareText,
+  Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -43,6 +44,8 @@ import {
   SelectValue,
 } from './ui/select';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from './ui/input-otp';
+import { recordPayment, getUserPayments } from '../firebase';
+import { toast } from 'sonner';
 
 interface BillPaymentsProps {
   onNavigate: (page: string) => void;
@@ -82,6 +85,8 @@ export function BillPayments({ onNavigate, onToggleChatbot }: BillPaymentsProps)
   const [showUpiModal, setShowUpiModal] = useState(false);
   const [pin, setPin] = useState('');
   const [historyFilter, setHistoryFilter] = useState('30days');
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const billTypes: BillType[] = [
     {
@@ -117,48 +122,23 @@ export function BillPayments({ onNavigate, onToggleChatbot }: BillPaymentsProps)
     { id: 'bhim', name: 'BHIM', logo: 'B', color: 'from-orange-500 to-red-600' },
   ];
 
-  const mockTransactions: Transaction[] = [
-    {
-      id: '1',
-      date: '2025-10-28',
-      billType: 'Electricity',
-      consumerNumber: '123456789',
-      amount: 2450,
-      status: 'Success',
-    },
-    {
-      id: '2',
-      date: '2025-10-15',
-      billType: 'Water',
-      consumerNumber: '987654321',
-      amount: 850,
-      status: 'Success',
-    },
-    {
-      id: '3',
-      date: '2025-10-10',
-      billType: 'Gas',
-      consumerNumber: '456789123',
-      amount: 1200,
-      status: 'Success',
-    },
-    {
-      id: '4',
-      date: '2025-09-28',
-      billType: 'Electricity',
-      consumerNumber: '123456789',
-      amount: 2300,
-      status: 'Success',
-    },
-    {
-      id: '5',
-      date: '2025-09-20',
-      billType: 'Water',
-      consumerNumber: '987654321',
-      amount: 820,
-      status: 'Failed',
-    },
-  ];
+  // Fetch payment history on mount
+  useEffect(() => {
+    const fetchPayments = async () => {
+      setLoading(true);
+      try {
+        const result = await getUserPayments();
+        if (result.success) {
+          setTransactions(result.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching payments:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPayments();
+  }, []);
 
   const handleProceedToPayment = () => {
     if (consumerNumber && amount) {
@@ -178,13 +158,41 @@ export function BillPayments({ onNavigate, onToggleChatbot }: BillPaymentsProps)
     }
   };
 
-  const handleUpiSelection = (appId: string) => {
-    // Handle UPI app selection and payment
+  const handleUpiSelection = async (appId: string) => {
+    if (!selectedBill) return;
+
+    // Record payment to Firestore
+    const paymentData = {
+      billType: selectedBill.name.replace(' Bill', ''),
+      consumerNumber,
+      amount: parseFloat(amount),
+      paymentMethod: 'UPI',
+      upiApp: upiApps.find(app => app.id === appId)?.name || appId,
+      status: 'Success' as const,
+      transactionId: `TXN${Date.now()}`,
+    };
+
+    try {
+      const result = await recordPayment(paymentData);
+      if (result.success) {
+        toast.success('Payment successful!');
+        // Refresh payment history
+        const updatedPayments = await getUserPayments();
+        if (updatedPayments.success) {
+          setTransactions(updatedPayments.data || []);
+        }
+      } else {
+        toast.error(result.message || 'Payment recording failed');
+      }
+    } catch (error) {
+      toast.error('An error occurred while recording payment');
+      console.error('Error recording payment:', error);
+    }
+
     setShowUpiModal(false);
     setSelectedBill(null);
     setConsumerNumber('');
     setAmount('');
-    // Show success message or redirect
   };
 
   const handleCancel = () => {
@@ -228,9 +236,9 @@ export function BillPayments({ onNavigate, onToggleChatbot }: BillPaymentsProps)
             </Button>
             {onToggleChatbot && (
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="relative hover:bg-white/50"
                   onClick={onToggleChatbot}
                 >
@@ -415,7 +423,7 @@ export function BillPayments({ onNavigate, onToggleChatbot }: BillPaymentsProps)
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockTransactions.map((transaction, index) => (
+                    {transactions.map((transaction, index) => (
                       <motion.tr
                         key={transaction.id}
                         initial={{ opacity: 0, y: 10 }}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft,
@@ -16,6 +16,7 @@ import {
   Upload,
   FileText,
   MessageSquareText,
+  Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -34,6 +35,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { toast } from 'sonner';
 import { allGovernmentSchemes, indianStates } from '../data/schemes';
+import { submitSchemeApplication, getUserSchemeApplications } from '../firebase';
 
 interface GovernmentSchemesProps {
   onNavigate: (page: string) => void;
@@ -59,8 +61,29 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
   const [complaint, setComplaint] = useState('');
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [selectedScheme, setSelectedScheme] = useState<Scheme | null>(null);
+  const [userApplications, setUserApplications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const schemes: Scheme[] = allGovernmentSchemes;
+
+  // Fetch user's scheme applications on mount
+  useEffect(() => {
+    const fetchApplications = async () => {
+      setLoading(true);
+      try {
+        const result = await getUserSchemeApplications();
+        if (result.success) {
+          setUserApplications(result.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching applications:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchApplications();
+  }, []);
 
   const toggleExpanded = (schemeId: string) => {
     const newExpanded = new Set(expandedSchemes);
@@ -102,7 +125,7 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
 
   const filteredSchemes = schemes.filter((scheme) => {
     const matchesSearch = scheme.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         scheme.description.toLowerCase().includes(searchQuery.toLowerCase());
+      scheme.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesState = stateFilter === 'all' || scheme.state === stateFilter || scheme.state === 'All India';
     return matchesSearch && matchesState;
   });
@@ -121,11 +144,69 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
     setShowApplicationModal(true);
   };
 
-  const handleSubmitApplication = (e: React.FormEvent) => {
+  const handleSubmitApplication = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowApplicationModal(false);
-    toast.success('Scheme application submitted successfully!');
-    setSelectedScheme(null);
+    if (!selectedScheme) return;
+
+    setSubmitting(true);
+    const formData = new FormData(e.target as HTMLFormElement);
+
+    const applicationData = {
+      schemeId: selectedScheme.id,
+      schemeName: selectedScheme.name,
+      schemeType: selectedScheme.type,
+      applicantDetails: {
+        fullName: formData.get('full-name') as string,
+        email: formData.get('email') as string,
+        phone: formData.get('phone') as string,
+        dob: formData.get('dob') as string,
+        gender: formData.get('gender') as string,
+        aadhaar: formData.get('aadhaar') as string,
+        address: formData.get('address') as string,
+        city: formData.get('city') as string,
+        state: formData.get('state') as string,
+        pincode: formData.get('pincode') as string,
+      },
+      financialInfo: selectedScheme.type === 'Financial' || selectedScheme.type === 'Education' ? {
+        familyIncome: formData.get('family-income') as string,
+        category: formData.get('category') as string,
+        bankAccount: formData.get('bank-account') as string,
+        ifsc: formData.get('ifsc') as string,
+      } : {},
+      educationalInfo: selectedScheme.type === 'Education' ? {
+        institution: formData.get('institution') as string,
+        course: formData.get('course') as string,
+        year: formData.get('year') as string,
+        percentage: formData.get('percentage') as string,
+      } : {},
+      documents: {
+        aadhaarLink: formData.get('aadhaar-link') as string,
+        incomeLink: formData.get('income-link') as string,
+        addressLink: formData.get('address-link') as string || '',
+      },
+      reason: formData.get('reason') as string,
+    };
+
+    try {
+      const result = await submitSchemeApplication(applicationData);
+      if (result.success) {
+        toast.success('Scheme application submitted successfully!');
+        setShowApplicationModal(false);
+        setSelectedScheme(null);
+        // Refresh applications list
+        const updatedApps = await getUserSchemeApplications();
+        if (updatedApps.success) {
+          setUserApplications(updatedApps.data || []);
+        }
+      } else {
+        toast.error(result.message || 'Failed to submit application');
+      }
+    } catch (error) {
+      toast.error('An error occurred while submitting the application');
+      console.error('Error submitting application:', error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -155,9 +236,9 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
               </div>
               {onToggleChatbot && (
                 <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     className="relative hover:bg-white/50"
                     onClick={onToggleChatbot}
                   >
@@ -324,7 +405,7 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
                             <span>Status: {statusConfig.label}</span>
                           </div>
                         ) : (
-                          <Button 
+                          <Button
                             className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg"
                             onClick={() => handleApply(scheme)}
                           >
@@ -588,10 +669,10 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
               <h3 className="text-gray-900">Additional Information</h3>
               <div className="space-y-2">
                 <Label htmlFor="reason">Why do you need this scheme? *</Label>
-                <Textarea 
-                  id="reason" 
-                  placeholder="Please explain your need for this scheme..." 
-                  required 
+                <Textarea
+                  id="reason"
+                  placeholder="Please explain your need for this scheme..."
+                  required
                   rows={4}
                 />
               </div>
@@ -601,7 +682,7 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
             <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg">
               <input type="checkbox" id="terms" required className="mt-1" />
               <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
-                I hereby declare that the information provided above is true and correct to the best of my knowledge. 
+                I hereby declare that the information provided above is true and correct to the best of my knowledge.
                 I understand that any false information may lead to rejection of my application.
               </Label>
             </div>

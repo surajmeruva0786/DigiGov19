@@ -645,5 +645,300 @@ export async function getUserFeedback(userId) {
   }
 }
 
+// --------------------------------------------------------------------------------
+// Firestore: schemeApplications
+// --------------------------------------------------------------------------------
+export async function submitSchemeApplication(data) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...data,
+      userId,
+      status: 'Submitted',
+      remarks: '',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'schemeApplications'), payload);
+    return buildResponse(true, 'Scheme application submitted successfully', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getUserSchemeApplications(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'schemeApplications'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Scheme applications fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllSchemeApplications() {
+  try {
+    const q = query(
+      collection(db, 'schemeApplications'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // Fetch user details for each application
+    const itemsWithUserDetails = await Promise.all(
+      items.map(async (item) => {
+        if (item.userId) {
+          const userProfile = await getUserProfile(item.userId);
+          if (userProfile) {
+            return {
+              ...item,
+              userName: userProfile.name || userProfile.fullName || 'Unknown',
+              userPhone: userProfile.phone || userProfile.phoneNumber || 'N/A',
+              userEmail: userProfile.email || 'N/A',
+            };
+          }
+        }
+        return item;
+      })
+    );
+
+    return buildResponse(true, 'All scheme applications fetched', itemsWithUserDetails);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function updateSchemeApplicationStatus(id, status, remarks = '') {
+  try {
+    await updateDoc(doc(db, 'schemeApplications', id), {
+      status,
+      remarks,
+      updatedAt: serverTimestamp(),
+    });
+    return buildResponse(true, 'Scheme application status updated', { id, status, remarks });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: children
+// --------------------------------------------------------------------------------
+export async function addChild(childData) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...childData,
+      userId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'children'), payload);
+    return buildResponse(true, 'Child added successfully', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getUserChildren(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'children'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Children fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function updateChild(childId, data) {
+  try {
+    const userId = requireAuthUid();
+    // Verify ownership before updating
+    const childRef = doc(db, 'children', childId);
+    const childSnap = await getDoc(childRef);
+
+    if (!childSnap.exists()) {
+      return buildResponse(false, 'Child record not found', null);
+    }
+
+    if (childSnap.data().userId !== userId) {
+      return buildResponse(false, 'Unauthorized to update this child record', null);
+    }
+
+    await updateDoc(childRef, {
+      ...data,
+      updatedAt: serverTimestamp(),
+    });
+    return buildResponse(true, 'Child updated successfully', { id: childId });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function deleteChild(childId) {
+  try {
+    const userId = requireAuthUid();
+    // Verify ownership before deleting
+    const childRef = doc(db, 'children', childId);
+    const childSnap = await getDoc(childRef);
+
+    if (!childSnap.exists()) {
+      return buildResponse(false, 'Child record not found', null);
+    }
+
+    if (childSnap.data().userId !== userId) {
+      return buildResponse(false, 'Unauthorized to delete this child record', null);
+    }
+
+    await deleteDoc(childRef);
+    return buildResponse(true, 'Child deleted successfully', { id: childId });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllChildren() {
+  try {
+    const q = query(
+      collection(db, 'children'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // Fetch user details for each child
+    const itemsWithUserDetails = await Promise.all(
+      items.map(async (item) => {
+        if (item.userId) {
+          const userProfile = await getUserProfile(item.userId);
+          if (userProfile) {
+            return {
+              ...item,
+              parentName: userProfile.name || userProfile.fullName || 'Unknown',
+              parentPhone: userProfile.phone || userProfile.phoneNumber || 'N/A',
+              parentEmail: userProfile.email || 'N/A',
+            };
+          }
+        }
+        return item;
+      })
+    );
+
+    return buildResponse(true, 'All children fetched', itemsWithUserDetails);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// Firestore: payments
+// --------------------------------------------------------------------------------
+export async function recordPayment(paymentData) {
+  try {
+    const userId = requireAuthUid();
+    const payload = {
+      ...paymentData,
+      userId,
+      createdAt: serverTimestamp(),
+      date: new Date().toISOString().split('T')[0],
+    };
+    const ref = await addDoc(collection(db, 'payments'), payload);
+    return buildResponse(true, 'Payment recorded successfully', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getUserPayments(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'payments'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Payments fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function getAllPayments() {
+  try {
+    const q = query(
+      collection(db, 'payments'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // Fetch user details for each payment
+    const itemsWithUserDetails = await Promise.all(
+      items.map(async (item) => {
+        if (item.userId) {
+          const userProfile = await getUserProfile(item.userId);
+          if (userProfile) {
+            return {
+              ...item,
+              userName: userProfile.name || userProfile.fullName || 'Unknown',
+              userPhone: userProfile.phone || userProfile.phoneNumber || 'N/A',
+              userEmail: userProfile.email || 'N/A',
+            };
+          }
+        }
+        return item;
+      })
+    );
+
+    return buildResponse(true, 'All payments fetched', itemsWithUserDetails);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
 
 
+
+
+// --------------------------------------------------------------------------------
+// Firestore: users (for official dashboard)
+// --------------------------------------------------------------------------------
+
+/**
+ * Get all users from Firestore (for official dashboard)
+ * Fetches all user signups with their profile information
+ */
+export async function getAllUsers() {
+  try {
+    const q = query(
+      collection(db, 'users'),
+      orderBy('createdAt', 'desc'),
+      limit(500)
+    );
+    const snap = await getDocs(q);
+    const users = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'All users fetched', users);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}

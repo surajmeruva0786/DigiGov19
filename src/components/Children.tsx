@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Plus, Mic, Flame, Calendar, Eye, MessageSquareText } from 'lucide-react';
+import { ArrowLeft, Plus, Mic, Flame, Calendar, Eye, MessageSquareText, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Label } from './ui/label';
+import { addChild, getUserChildren } from '../firebase';
+import { toast } from 'sonner';
 
 interface Child {
   id: string;
@@ -23,26 +25,9 @@ interface ChildrenProps {
 
 export function Children({ onNavigate, onToggleChatbot }: ChildrenProps) {
   const [showAddForm, setShowAddForm] = useState(false);
-  const [children, setChildren] = useState<Child[]>([
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      age: 8,
-      school: 'Lincoln Elementary School',
-      grade: '3rd Grade',
-      attendanceStreak: 12,
-      upcomingVaccination: 'Dec 15, 2024',
-    },
-    {
-      id: '2',
-      name: 'Michael Johnson',
-      age: 5,
-      school: 'Sunshine Kindergarten',
-      grade: 'Kindergarten',
-      attendanceStreak: 8,
-      upcomingVaccination: 'Jan 10, 2025',
-    },
-  ]);
+  const [children, setChildren] = useState<Child[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -51,10 +36,28 @@ export function Children({ onNavigate, onToggleChatbot }: ChildrenProps) {
     grade: '',
   });
 
-  const handleAddChild = () => {
+  // Fetch children from Firestore on mount
+  useEffect(() => {
+    const fetchChildren = async () => {
+      setLoading(true);
+      try {
+        const result = await getUserChildren();
+        if (result.success) {
+          setChildren(result.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching children:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchChildren();
+  }, []);
+
+  const handleAddChild = async () => {
     if (formData.name && formData.age && formData.school && formData.grade) {
-      const newChild: Child = {
-        id: Date.now().toString(),
+      setSubmitting(true);
+      const childData = {
         name: formData.name,
         age: parseInt(formData.age),
         school: formData.school,
@@ -62,9 +65,27 @@ export function Children({ onNavigate, onToggleChatbot }: ChildrenProps) {
         attendanceStreak: 0,
         upcomingVaccination: 'Not scheduled',
       };
-      setChildren([...children, newChild]);
-      setFormData({ name: '', age: '', school: '', grade: '' });
-      setShowAddForm(false);
+
+      try {
+        const result = await addChild(childData);
+        if (result.success) {
+          toast.success('Child added successfully!');
+          // Refresh children list
+          const updatedChildren = await getUserChildren();
+          if (updatedChildren.success) {
+            setChildren(updatedChildren.data || []);
+          }
+          setFormData({ name: '', age: '', school: '', grade: '' });
+          setShowAddForm(false);
+        } else {
+          toast.error(result.message || 'Failed to add child');
+        }
+      } catch (error) {
+        toast.error('An error occurred while adding child');
+        console.error('Error adding child:', error);
+      } finally {
+        setSubmitting(false);
+      }
     }
   };
 
@@ -76,7 +97,7 @@ export function Children({ onNavigate, onToggleChatbot }: ChildrenProps) {
   return (
     <div className="min-h-screen pt-16 pb-12 bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="absolute inset-0 grid-pattern opacity-30" />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Header */}
         <motion.div
@@ -95,7 +116,7 @@ export function Children({ onNavigate, onToggleChatbot }: ChildrenProps) {
             </Button>
             <h1 className="gradient-text text-4xl">Children</h1>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <Button
               onClick={() => setShowAddForm(!showAddForm)}
@@ -106,9 +127,9 @@ export function Children({ onNavigate, onToggleChatbot }: ChildrenProps) {
             </Button>
             {onToggleChatbot && (
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="relative hover:bg-white/50"
                   onClick={onToggleChatbot}
                 >
