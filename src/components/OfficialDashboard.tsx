@@ -1638,686 +1638,673 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
                       </TableBody>
                     </Table>
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Bill Payments Tab */}
-            <TabsContent value="bills" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Bill Payment Records</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="rounded-lg border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gray-50">
-                          <TableHead>ID</TableHead>
-                          <TableHead>User</TableHead>
-                          <TableHead>Bill Type</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Due Date</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {(paymentsData.length > 0 ? paymentsData : billPayments).map((bill) => (
-                          <TableRow
-                            key={bill.id}
-                            className="cursor-pointer hover:bg-blue-50 transition-colors"
-                            onClick={() => handleRowClick(bill, 'Bill')}
-                          >
-                            <TableCell className="font-medium">{bill.id}</TableCell>
-                            <TableCell>{bill.user}</TableCell>
-                            <TableCell>{bill.type}</TableCell>
-                            <TableCell className="font-medium">{bill.amount}</TableCell>
-                            <TableCell>{bill.dueDate}</TableCell>
-                            <TableCell>
-                              <Badge className={getStatusColor(bill.status)}>{bill.status}</Badge>
-                            </TableCell>
-                            <TableCell onClick={(e) => e.stopPropagation()}>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleRowClick(bill, 'Bill')}
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                                <Select
-                                  value={bill.status}
-                                  onValueChange={(value) => {
-                                    toast.success(`Bill status updated to ${value}`);
-                                  }}
-                                >
-                                  <SelectTrigger className="w-[120px] h-8">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="Pending">Pending</SelectItem>
-                                    <SelectItem value="Paid">Paid</SelectItem>
-                                    <SelectItem value="Overdue">Overdue</SelectItem>
-                                    <SelectItem value="Refunded">Refunded</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </TableCell>
-                          </TableRow>
+                </TableCell>
+              </TableRow>
                         ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Activity Logs Tab */}
-            <TabsContent value="logs" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Activity Logs</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="rounded-lg border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gray-50">
-                          <TableHead>ID</TableHead>
-                          <TableHead>Timestamp</TableHead>
-                          <TableHead>User</TableHead>
-                          <TableHead>Action</TableHead>
-                          <TableHead>Details</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {activityLogs.map((log) => (
-                          <TableRow
-                            key={log.id}
-                            className="cursor-pointer hover:bg-blue-50 transition-colors"
-                            onClick={() => handleRowClick(log, 'Activity')}
-                          >
-                            <TableCell className="font-medium">{log.id}</TableCell>
-                            <TableCell>{log.timestamp}</TableCell>
-                            <TableCell>{log.user}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{log.action}</Badge>
-                            </TableCell>
-                            <TableCell className="max-w-xs truncate">{log.details}</TableCell>
-                            <TableCell>
-                              <Badge className={getStatusColor(log.status)}>{log.status}</Badge>
-                            </TableCell>
-                            <TableCell onClick={(e) => e.stopPropagation()}>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleRowClick(log, 'Activity')}
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Health Services Tab */}
-            <TabsContent value="health" className="mt-6">
-              <Tabs defaultValue="donors" className="w-full">
-                <TabsList className="w-full mb-6">
-                  <TabsTrigger value="donors" className="flex-1">
-                    <Droplet className="w-4 h-4 mr-2" />
-                    Donor Registrations
-                  </TabsTrigger>
-                  <TabsTrigger value="requests" className="flex-1">
-                    <Heart className="w-4 h-4 mr-2" />
-                    Blood/Organ Requests
-                  </TabsTrigger>
-                </TabsList>
-
-                {/* Donor Registrations Sub-Tab */}
-                <TabsContent value="donors">
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle>Donor Registrations</CardTitle>
-                        <div className="flex gap-2">
-                          <Badge variant="outline" className="bg-red-50 text-red-700">
-                            {donorRegistrations.filter(d => d.donorType === 'Blood').length} Blood Donors
-                          </Badge>
-                          <Badge variant="outline" className="bg-purple-50 text-purple-700">
-                            {donorRegistrations.filter(d => d.donorType === 'Organ').length} Organ Donors
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="rounded-lg border">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-gray-50">
-                              <TableHead>ID</TableHead>
-                              <TableHead>Donor Name</TableHead>
-                              <TableHead>Type</TableHead>
-                              <TableHead>Blood Group</TableHead>
-                              <TableHead>Age</TableHead>
-                              <TableHead>Location</TableHead>
-                              <TableHead>Availability</TableHead>
-                              <TableHead>Registered On</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead>Actions</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {(donorRegistrationsData.length > 0 ? donorRegistrationsData : donorRegistrations).map((donor: any) => (
-                              <TableRow
-                                key={donor.id}
-                                className="cursor-pointer hover:bg-blue-50 transition-colors"
-                                onClick={() => handleRowClick(donor, 'Donor')}
-                              >
-                                <TableCell className="font-medium">{donor.id}</TableCell>
-                                <TableCell>{donor.donorName}</TableCell>
-                                <TableCell>
-                                  <Badge className={donor.donorType === 'Blood' ? 'bg-red-100 text-red-800' : 'bg-purple-100 text-purple-800'}>
-                                    {donor.donorType === 'Blood' ? '🩸 Blood' : '🫀 Organ'}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="outline">{donor.bloodGroup}</Badge>
-                                </TableCell>
-                                <TableCell>{donor.age}</TableCell>
-                                <TableCell>{donor.location}</TableCell>
-                                <TableCell className="text-sm">{donor.availability}</TableCell>
-                                <TableCell>{donor.registeredOn}</TableCell>
-                                <TableCell>
-                                  <Badge className={getStatusColor(donor.status)}>{donor.status}</Badge>
-                                </TableCell>
-                                <TableCell onClick={(e) => e.stopPropagation()}>
-                                  <div className="flex gap-2">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handleRowClick(donor, 'Donor')}
-                                    >
-                                      <Eye className="w-4 h-4" />
-                                    </Button>
-                                    <Select
-                                      value={donor.status}
-                                      onValueChange={(value) => {
-                                        toast.success(`Donor status updated to ${value}`);
-                                      }}
-                                    >
-                                      <SelectTrigger className="w-[140px] h-8">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Pending Verification">Pending Verification</SelectItem>
-                                        <SelectItem value="Active">Active</SelectItem>
-                                        <SelectItem value="Inactive">Inactive</SelectItem>
-                                        <SelectItem value="Suspended">Suspended</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                {/* Blood/Organ Requests Sub-Tab */}
-                <TabsContent value="requests">
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle>Blood & Organ Requests</CardTitle>
-                        <div className="flex gap-2">
-                          <Badge variant="outline" className="bg-red-50 text-red-700">
-                            {healthRequests.filter(r => r.requestType === 'Blood').length} Blood Requests
-                          </Badge>
-                          <Badge variant="outline" className="bg-purple-50 text-purple-700">
-                            {healthRequests.filter(r => r.requestType === 'Organ').length} Organ Requests
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="rounded-lg border">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-gray-50">
-                              <TableHead>ID</TableHead>
-                              <TableHead>Patient Name</TableHead>
-                              <TableHead>Type</TableHead>
-                              <TableHead>Requirement</TableHead>
-                              <TableHead>Hospital</TableHead>
-                              <TableHead>Urgency</TableHead>
-                              <TableHead>Required By</TableHead>
-                              <TableHead>Matched Donors</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead>Actions</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {healthRequests.map((request) => (
-                              <TableRow
-                                key={request.id}
-                                className="cursor-pointer hover:bg-blue-50 transition-colors"
-                                onClick={() => handleRowClick(request, 'HealthRequest')}
-                              >
-                                <TableCell className="font-medium">{request.id}</TableCell>
-                                <TableCell>{request.patientName}</TableCell>
-                                <TableCell>
-                                  <Badge className={request.requestType === 'Blood' ? 'bg-red-100 text-red-800' : 'bg-purple-100 text-purple-800'}>
-                                    {request.requestType === 'Blood' ? '🩸 Blood' : '🫀 Organ'}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="outline">
-                                    {request.requestType === 'Blood' ? request.bloodGroupNeeded : request.organType}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="max-w-xs truncate">{request.hospital}</TableCell>
-                                <TableCell>
-                                  <Badge className={getPriorityColor(request.urgency)}>
-                                    {request.urgency}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell>{request.requiredBy}</TableCell>
-                                <TableCell>
-                                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                                    {request.matchedDonors} matched
-                                  </Badge>
-                                </TableCell>
-                                <TableCell>
-                                  <Badge className={getStatusColor(request.status)}>{request.status}</Badge>
-                                </TableCell>
-                                <TableCell onClick={(e) => e.stopPropagation()}>
-                                  <div className="flex gap-2">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handleRowClick(request, 'HealthRequest')}
-                                    >
-                                      <Eye className="w-4 h-4" />
-                                    </Button>
-                                    <Select
-                                      value={request.status}
-                                      onValueChange={(value) => {
-                                        toast.success(`Request status updated to ${value}`);
-                                      }}
-                                    >
-                                      <SelectTrigger className="w-[140px] h-8">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Pending">Pending</SelectItem>
-                                        <SelectItem value="In Progress">In Progress</SelectItem>
-                                        <SelectItem value="Fulfilled">Fulfilled</SelectItem>
-                                        <SelectItem value="Cancelled">Cancelled</SelectItem>
-                                        <SelectItem value="Expired">Expired</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </TabsContent>
-
-            {/* Citizen Feedback Tab */}
-            <TabsContent value="feedback" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Citizen Feedback</CardTitle>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="text-sm text-gray-500">Average Rating</p>
-                        <div className="flex items-center gap-2">
-                          <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                          <span className="text-xl font-medium">
-                            {(feedbackData.reduce((acc, f) => acc + f.rating, 0) / feedbackData.length).toFixed(1)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="rounded-lg border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gray-50">
-                          <TableHead>ID</TableHead>
-                          <TableHead>User</TableHead>
-                          <TableHead>Service</TableHead>
-                          <TableHead>Rating</TableHead>
-                          <TableHead>Comment</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {feedbackData.map((feedback) => (
-                          <TableRow
-                            key={feedback.id}
-                            className="cursor-pointer hover:bg-blue-50 transition-colors"
-                            onClick={() => handleRowClick(feedback, 'Feedback')}
-                          >
-                            <TableCell className="font-medium">{feedback.id}</TableCell>
-                            <TableCell>{feedback.user}</TableCell>
-                            <TableCell>{feedback.service}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1">
-                                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                <span className="font-medium">{feedback.rating}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="max-w-xs truncate">{feedback.comment}</TableCell>
-                            <TableCell>{feedback.date}</TableCell>
-                            <TableCell>
-                              <Badge className={getStatusColor(feedback.status)}>{feedback.status}</Badge>
-                            </TableCell>
-                            <TableCell onClick={(e) => e.stopPropagation()}>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleRowClick(feedback, 'Feedback')}
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                                <Select
-                                  value={feedback.status}
-                                  onValueChange={(value) => {
-                                    toast.success(`Feedback status updated to ${value}`);
-                                  }}
-                                >
-                                  <SelectTrigger className="w-[140px] h-8">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="Pending Review">Pending Review</SelectItem>
-                                    <SelectItem value="Reviewed">Reviewed</SelectItem>
-                                    <SelectItem value="Responded">Responded</SelectItem>
-                                    <SelectItem value="Archived">Archived</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Scholarship Verification Tab */}
-            <TabsContent value="scholarships" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Scholarship Applications</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="rounded-lg border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gray-50">
-                          <TableHead>ID</TableHead>
-                          <TableHead>Student</TableHead>
-                          <TableHead>Parent</TableHead>
-                          <TableHead>Scholarship</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableCell className="font-medium">{sch.id}</TableCell>
-                          <TableCell>{sch.student}</TableCell>
-                          <TableCell>{sch.parent}</TableCell>
-                          <TableCell>{sch.scholarship}</TableCell>
-                          <TableCell className="font-medium text-green-600">{sch.amount}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{sch.academicPercentage}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={getStatusColor(sch.status)}>{sch.status}</Badge>
-                          </TableCell>
-                          <TableCell onClick={(e) => e.stopPropagation()}>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleRowClick(sch, 'Scholarship')}
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              <Select
-                                value={sch.status}
-                                onValueChange={(value) => {
-                                  toast.success(`Scholarship status updated to ${value}`);
-                                }}
-                              >
-                                <SelectTrigger className="w-[160px] h-8">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Pending Verification">Pending Verification</SelectItem>
-                                  <SelectItem value="Under Review">Under Review</SelectItem>
-                                  <SelectItem value="Verified">Verified</SelectItem>
-                                  <SelectItem value="Approved">Approved</SelectItem>
-                                  <SelectItem value="Rejected">Rejected</SelectItem>
-                                  <SelectItem value="Disbursed">Disbursed</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </motion.div>
+            </TableBody>
+          </Table>
       </div>
+    </CardContent>
+              </Card >
+            </TabsContent >
 
-      {/* Notifications Panel */}
-      <Dialog open={showNotifications} onOpenChange={setShowNotifications}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-2xl">Notifications</DialogTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={markAllNotificationsRead}
-                className="text-blue-600 hover:text-blue-700"
-              >
-                Mark all as read
+    {/* Activity Logs Tab */ }
+    < TabsContent value = "logs" className = "mt-6" >
+      <Card>
+        <CardHeader>
+          <CardTitle>Activity Logs</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50">
+                  <TableHead>ID</TableHead>
+                  <TableHead>Timestamp</TableHead>
+                  <TableHead>User</TableHead>
+                  <TableHead>Action</TableHead>
+                  <TableHead>Details</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {activityLogs.map((log) => (
+                  <TableRow
+                    key={log.id}
+                    className="cursor-pointer hover:bg-blue-50 transition-colors"
+                    onClick={() => handleRowClick(log, 'Activity')}
+                  >
+                    <TableCell className="font-medium">{log.id}</TableCell>
+                    <TableCell>{log.timestamp}</TableCell>
+                    <TableCell>{log.user}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{log.action}</Badge>
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate">{log.details}</TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(log.status)}>{log.status}</Badge>
+                    </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleRowClick(log, 'Activity')}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+            </TabsContent >
+
+    {/* Health Services Tab */ }
+    < TabsContent value = "health" className = "mt-6" >
+      <Tabs defaultValue="donors" className="w-full">
+        <TabsList className="w-full mb-6">
+          <TabsTrigger value="donors" className="flex-1">
+            <Droplet className="w-4 h-4 mr-2" />
+            Donor Registrations
+          </TabsTrigger>
+          <TabsTrigger value="requests" className="flex-1">
+            <Heart className="w-4 h-4 mr-2" />
+            Blood/Organ Requests
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Donor Registrations Sub-Tab */}
+        <TabsContent value="donors">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Donor Registrations</CardTitle>
+                <div className="flex gap-2">
+                  <Badge variant="outline" className="bg-red-50 text-red-700">
+                    {donorRegistrations.filter(d => d.donorType === 'Blood').length} Blood Donors
+                  </Badge>
+                  <Badge variant="outline" className="bg-purple-50 text-purple-700">
+                    {donorRegistrations.filter(d => d.donorType === 'Organ').length} Organ Donors
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-50">
+                      <TableHead>ID</TableHead>
+                      <TableHead>Donor Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Blood Group</TableHead>
+                      <TableHead>Age</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Availability</TableHead>
+                      <TableHead>Registered On</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(donorRegistrationsData.length > 0 ? donorRegistrationsData : donorRegistrations).map((donor: any) => (
+                      <TableRow
+                        key={donor.id}
+                        className="cursor-pointer hover:bg-blue-50 transition-colors"
+                        onClick={() => handleRowClick(donor, 'Donor')}
+                      >
+                        <TableCell className="font-medium">{donor.id}</TableCell>
+                        <TableCell>{donor.donorName}</TableCell>
+                        <TableCell>
+                          <Badge className={donor.donorType === 'Blood' ? 'bg-red-100 text-red-800' : 'bg-purple-100 text-purple-800'}>
+                            {donor.donorType === 'Blood' ? '🩸 Blood' : '🫀 Organ'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{donor.bloodGroup}</Badge>
+                        </TableCell>
+                        <TableCell>{donor.age}</TableCell>
+                        <TableCell>{donor.location}</TableCell>
+                        <TableCell className="text-sm">{donor.availability}</TableCell>
+                        <TableCell>{donor.registeredOn}</TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(donor.status)}>{donor.status}</Badge>
+                        </TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRowClick(donor, 'Donor')}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Select
+                              value={donor.status}
+                              onValueChange={(value) => {
+                                toast.success(`Donor status updated to ${value}`);
+                              }}
+                            >
+                              <SelectTrigger className="w-[140px] h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Pending Verification">Pending Verification</SelectItem>
+                                <SelectItem value="Active">Active</SelectItem>
+                                <SelectItem value="Inactive">Inactive</SelectItem>
+                                <SelectItem value="Suspended">Suspended</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Blood/Organ Requests Sub-Tab */}
+        <TabsContent value="requests">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Blood & Organ Requests</CardTitle>
+                <div className="flex gap-2">
+                  <Badge variant="outline" className="bg-red-50 text-red-700">
+                    {healthRequests.filter(r => r.requestType === 'Blood').length} Blood Requests
+                  </Badge>
+                  <Badge variant="outline" className="bg-purple-50 text-purple-700">
+                    {healthRequests.filter(r => r.requestType === 'Organ').length} Organ Requests
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-50">
+                      <TableHead>ID</TableHead>
+                      <TableHead>Patient Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Requirement</TableHead>
+                      <TableHead>Hospital</TableHead>
+                      <TableHead>Urgency</TableHead>
+                      <TableHead>Required By</TableHead>
+                      <TableHead>Matched Donors</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {healthRequests.map((request) => (
+                      <TableRow
+                        key={request.id}
+                        className="cursor-pointer hover:bg-blue-50 transition-colors"
+                        onClick={() => handleRowClick(request, 'HealthRequest')}
+                      >
+                        <TableCell className="font-medium">{request.id}</TableCell>
+                        <TableCell>{request.patientName}</TableCell>
+                        <TableCell>
+                          <Badge className={request.requestType === 'Blood' ? 'bg-red-100 text-red-800' : 'bg-purple-100 text-purple-800'}>
+                            {request.requestType === 'Blood' ? '🩸 Blood' : '🫀 Organ'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {request.requestType === 'Blood' ? request.bloodGroupNeeded : request.organType}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate">{request.hospital}</TableCell>
+                        <TableCell>
+                          <Badge className={getPriorityColor(request.urgency)}>
+                            {request.urgency}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{request.requiredBy}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                            {request.matchedDonors} matched
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(request.status)}>{request.status}</Badge>
+                        </TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRowClick(request, 'HealthRequest')}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Select
+                              value={request.status}
+                              onValueChange={(value) => {
+                                toast.success(`Request status updated to ${value}`);
+                              }}
+                            >
+                              <SelectTrigger className="w-[140px] h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Pending">Pending</SelectItem>
+                                <SelectItem value="In Progress">In Progress</SelectItem>
+                                <SelectItem value="Fulfilled">Fulfilled</SelectItem>
+                                <SelectItem value="Cancelled">Cancelled</SelectItem>
+                                <SelectItem value="Expired">Expired</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+            </TabsContent >
+
+    {/* Citizen Feedback Tab */ }
+    < TabsContent value = "feedback" className = "mt-6" >
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Citizen Feedback</CardTitle>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm text-gray-500">Average Rating</p>
+                <div className="flex items-center gap-2">
+                  <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                  <span className="text-xl font-medium">
+                    {(feedbackData.reduce((acc, f) => acc + f.rating, 0) / feedbackData.length).toFixed(1)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50">
+                  <TableHead>ID</TableHead>
+                  <TableHead>User</TableHead>
+                  <TableHead>Service</TableHead>
+                  <TableHead>Rating</TableHead>
+                  <TableHead>Comment</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {feedbackData.map((feedback) => (
+                  <TableRow
+                    key={feedback.id}
+                    className="cursor-pointer hover:bg-blue-50 transition-colors"
+                    onClick={() => handleRowClick(feedback, 'Feedback')}
+                  >
+                    <TableCell className="font-medium">{feedback.id}</TableCell>
+                    <TableCell>{feedback.user}</TableCell>
+                    <TableCell>{feedback.service}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-medium">{feedback.rating}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate">{feedback.comment}</TableCell>
+                    <TableCell>{feedback.date}</TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(feedback.status)}>{feedback.status}</Badge>
+                    </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRowClick(feedback, 'Feedback')}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Select
+                          value={feedback.status}
+                          onValueChange={(value) => {
+                            toast.success(`Feedback status updated to ${value}`);
+                          }}
+                        >
+                          <SelectTrigger className="w-[140px] h-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Pending Review">Pending Review</SelectItem>
+                            <SelectItem value="Reviewed">Reviewed</SelectItem>
+                            <SelectItem value="Responded">Responded</SelectItem>
+                            <SelectItem value="Archived">Archived</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </TabsContent >
+
+    {/* Scholarship Applications Tab */ }
+    < TabsContent value = "scholarships" className = "mt-6" >
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Scholarship Applications</CardTitle>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm">
+                <Filter className="w-4 h-4 mr-2" />
+                Filters
+              </Button>
+              <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                <Download className="w-4 h-4 mr-2" />
+                Export to Excel
               </Button>
             </div>
-            <DialogDescription>
-              Stay updated with the latest activities and requests
-            </DialogDescription>
-          </DialogHeader>
-
-          <ScrollArea className="h-[500px] pr-4">
-            <div className="space-y-3">
-              {notifications.map((notification) => (
-                <motion.div
-                  key={notification.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className={`p-4 rounded-lg border transition-all cursor-pointer ${!notification.read
-                    ? 'bg-blue-50 border-blue-200 hover:bg-blue-100'
-                    : 'bg-white hover:bg-gray-50'
-                    }`}
-                  onClick={() => markNotificationRead(notification.id)}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${notification.priority === 'high' ? 'bg-red-100' :
-                      notification.priority === 'medium' ? 'bg-yellow-100' :
-                        'bg-green-100'
-                      }`}>
-                      {notification.type === 'application' && <FileText className="w-5 h-5 text-blue-600" />}
-                      {notification.type === 'complaint' && <MessageSquare className="w-5 h-5 text-red-600" />}
-                      {notification.type === 'document' && <FolderOpen className="w-5 h-5 text-purple-600" />}
-                      {notification.type === 'feedback' && <Star className="w-5 h-5 text-yellow-600" />}
-                      {notification.type === 'scholarship' && <GraduationCap className="w-5 h-5 text-green-600" />}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-1">
-                        <h4 className="font-medium text-gray-900">{notification.title}</h4>
-                        {!notification.read && (
-                          <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
-                        )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50">
+                  <TableHead>ID</TableHead>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Scholarship</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>School</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Applied On</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoadingScholarships ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="h-24 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                        <span>Loading applications...</span>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">{notification.message}</p>
-                      <p className="text-xs text-gray-500">{notification.time}</p>
+                    </TableCell>
+                  </TableRow>
+                ) : scholarshipApplicationsData.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="h-24 text-center text-gray-500">
+                      No scholarship applications found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  scholarshipApplicationsData.map((app) => (
+                    <TableRow
+                      key={app.id}
+                      className="cursor-pointer hover:bg-blue-50 transition-colors"
+                      onClick={() => handleRowClick(app, 'Scholarship Application')}
+                    >
+                      <TableCell className="font-medium">{app.id}</TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{app.student}</p>
+                          <p className="text-xs text-gray-500">Parent: {app.parent}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>{app.scholarship}</TableCell>
+                      <TableCell>{app.amount}</TableCell>
+                      <TableCell>{app.school}</TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(app.status)}>
+                          {app.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{app.appliedOn}</TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRowClick(app, 'Scholarship Application')}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Select
+                            value={app.status}
+                            onValueChange={(value) => {
+                              if (value === 'Approved') handleAction(app, 'approve');
+                              else if (value === 'Rejected') handleAction(app, 'reject');
+                              else {
+                                setSelectedItem(app);
+                                setNewStatus(value);
+                                setActionType('update');
+                                setShowActionModal(true);
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="w-[140px] h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Pending Verification">Pending Verification</SelectItem>
+                              <SelectItem value="Under Review">Under Review</SelectItem>
+                              <SelectItem value="Approved">Approved</SelectItem>
+                              <SelectItem value="Rejected">Rejected</SelectItem>
+                              <SelectItem value="Disbursed">Disbursed</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </TabsContent >
+  </Tabs >
+        </motion.div >
+      </div >
+
+    {/* Notifications Panel */ }
+    < Dialog open = { showNotifications } onOpenChange = { setShowNotifications } >
+      <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-2xl">Notifications</DialogTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={markAllNotificationsRead}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              Mark all as read
+            </Button>
+          </div>
+          <DialogDescription>
+            Stay updated with the latest activities and requests
+          </DialogDescription>
+        </DialogHeader>
+
+        <ScrollArea className="h-[500px] pr-4">
+          <div className="space-y-3">
+            {notifications.map((notification) => (
+              <motion.div
+                key={notification.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className={`p-4 rounded-lg border transition-all cursor-pointer ${!notification.read
+                  ? 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                  : 'bg-white hover:bg-gray-50'
+                  }`}
+                onClick={() => markNotificationRead(notification.id)}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${notification.priority === 'high' ? 'bg-red-100' :
+                    notification.priority === 'medium' ? 'bg-yellow-100' :
+                      'bg-green-100'
+                    }`}>
+                    {notification.type === 'application' && <FileText className="w-5 h-5 text-blue-600" />}
+                    {notification.type === 'complaint' && <MessageSquare className="w-5 h-5 text-red-600" />}
+                    {notification.type === 'document' && <FolderOpen className="w-5 h-5 text-purple-600" />}
+                    {notification.type === 'feedback' && <Star className="w-5 h-5 text-yellow-600" />}
+                    {notification.type === 'scholarship' && <GraduationCap className="w-5 h-5 text-green-600" />}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between mb-1">
+                      <h4 className="font-medium text-gray-900">{notification.title}</h4>
+                      {!notification.read && (
+                        <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                      )}
                     </div>
+                    <p className="text-sm text-gray-600 mb-2">{notification.message}</p>
+                    <p className="text-xs text-gray-500">{notification.time}</p>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </ScrollArea>
+      </DialogContent>
+      </Dialog >
 
-      {/* Detail Modal - Will render different content based on selectedItem.type */}
-      <DetailModal
-        open={showDetailModal}
-        onOpenChange={setShowDetailModal}
-        item={selectedItem}
-        getStatusColor={getStatusColor}
-        getPriorityColor={getPriorityColor}
-      />
+    {/* Detail Modal - Will render different content based on selectedItem.type */ }
+    < DetailModal
+  open = { showDetailModal }
+  onOpenChange = { setShowDetailModal }
+  item = { selectedItem }
+  getStatusColor = { getStatusColor }
+  getPriorityColor = { getPriorityColor }
+    />
 
-      {/* Action Modal (Approve/Reject/Update) */}
-      <Dialog open={showActionModal} onOpenChange={setShowActionModal}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="text-xl">
-              {actionType === 'approve' && 'Approve Item'}
-              {actionType === 'reject' && 'Reject Item'}
-              {actionType === 'update' && 'Update Status'}
-            </DialogTitle>
-            <DialogDescription>
-              {actionType === 'approve' && 'Confirm approval and provide any additional notes'}
-              {actionType === 'reject' && 'Provide reason for rejection'}
-              {actionType === 'update' && 'Update the current status and add notes'}
-            </DialogDescription>
-          </DialogHeader>
+    {/* Action Modal (Approve/Reject/Update) */ }
+    < Dialog open = { showActionModal } onOpenChange = { setShowActionModal } >
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="text-xl">
+            {actionType === 'approve' && 'Approve Item'}
+            {actionType === 'reject' && 'Reject Item'}
+            {actionType === 'update' && 'Update Status'}
+          </DialogTitle>
+          <DialogDescription>
+            {actionType === 'approve' && 'Confirm approval and provide any additional notes'}
+            {actionType === 'reject' && 'Provide reason for rejection'}
+            {actionType === 'update' && 'Update the current status and add notes'}
+          </DialogDescription>
+        </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {actionType === 'update' && (
-              <div className="space-y-2">
-                <Label htmlFor="new-status">New Status</Label>
-                <Select value={newStatus} onValueChange={setNewStatus}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select new status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Pending">Pending</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="Resolved">Resolved</SelectItem>
-                    <SelectItem value="Closed">Closed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
+        <div className="space-y-4 py-4">
+          {actionType === 'update' && (
             <div className="space-y-2">
-              <Label htmlFor="action-notes">
-                {actionType === 'reject' ? 'Reason for Rejection' : 'Notes (Optional)'}
-              </Label>
-              <Textarea
-                id="action-notes"
-                placeholder={
-                  actionType === 'reject'
-                    ? 'Please provide a detailed reason for rejection...'
-                    : 'Add any additional notes or comments...'
-                }
-                rows={4}
-                value={actionNotes}
-                onChange={(e) => setActionNotes(e.target.value)}
-                required={actionType === 'reject'}
-              />
+              <Label htmlFor="new-status">New Status</Label>
+              <Select value={newStatus} onValueChange={setNewStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select new status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
+                  <SelectItem value="Resolved">Resolved</SelectItem>
+                  <SelectItem value="Closed">Closed</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+          )}
 
-            {actionType === 'approve' && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-green-900">Confirmation</p>
-                    <p className="text-sm text-green-700 mt-1">
-                      This item will be marked as approved and the user will be notified.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {actionType === 'reject' && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-red-900">Warning</p>
-                    <p className="text-sm text-red-700 mt-1">
-                      This action will reject the item. Please ensure you have reviewed all details.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+          <div className="space-y-2">
+            <Label htmlFor="action-notes">
+              {actionType === 'reject' ? 'Reason for Rejection' : 'Notes (Optional)'}
+            </Label>
+            <Textarea
+              id="action-notes"
+              placeholder={
+                actionType === 'reject'
+                  ? 'Please provide a detailed reason for rejection...'
+                  : 'Add any additional notes or comments...'
+              }
+              rows={4}
+              value={actionNotes}
+              onChange={(e) => setActionNotes(e.target.value)}
+              required={actionType === 'reject'}
+            />
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowActionModal(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmitAction}
-              className={
-                actionType === 'approve'
-                  ? 'bg-green-600 hover:bg-green-700'
-                  : actionType === 'reject'
-                    ? 'bg-red-600 hover:bg-red-700'
-                    : 'bg-blue-600 hover:bg-blue-700'
-              }
-              disabled={actionType === 'reject' && !actionNotes.trim()}
-            >
-              {actionType === 'approve' && <CheckCircle className="w-4 h-4 mr-2" />}
-              {actionType === 'reject' && <XCircle className="w-4 h-4 mr-2" />}
-              {actionType === 'update' && <Clock className="w-4 h-4 mr-2" />}
-              {actionType === 'approve' && 'Approve'}
-              {actionType === 'reject' && 'Reject'}
-              {actionType === 'update' && 'Update Status'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+          {actionType === 'approve' && (
+            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-start gap-2">
+                <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-green-900">Confirmation</p>
+                  <p className="text-sm text-green-700 mt-1">
+                    This item will be marked as approved and the user will be notified.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {actionType === 'reject' && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-start gap-2">
+                <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-red-900">Warning</p>
+                  <p className="text-sm text-red-700 mt-1">
+                    This action will reject the item. Please ensure you have reviewed all details.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowActionModal(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmitAction}
+            className={
+              actionType === 'approve'
+                ? 'bg-green-600 hover:bg-green-700'
+                : actionType === 'reject'
+                  ? 'bg-red-600 hover:bg-red-700'
+                  : 'bg-blue-600 hover:bg-blue-700'
+            }
+            disabled={actionType === 'reject' && !actionNotes.trim()}
+          >
+            {actionType === 'approve' && <CheckCircle className="w-4 h-4 mr-2" />}
+            {actionType === 'reject' && <XCircle className="w-4 h-4 mr-2" />}
+            {actionType === 'update' && <Clock className="w-4 h-4 mr-2" />}
+            {actionType === 'approve' && 'Approve'}
+            {actionType === 'reject' && 'Reject'}
+            {actionType === 'update' && 'Update Status'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+      </Dialog >
+    </div >
   );
 }
 
@@ -3460,6 +3447,84 @@ function DetailModal({ open, onOpenChange, item, getStatusColor, getPriorityColo
                         <p className="text-sm text-yellow-800">No official response has been provided yet.</p>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* Scholarship Application Details */}
+          {item.type === 'Scholarship Application' && (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Application Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">Application ID</span>
+                      <p className="font-medium">{item.id}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">Scholarship Name</span>
+                      <p>{item.scholarship}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">Amount</span>
+                      <p className="text-xl font-medium text-green-600">{item.amount}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">Applied On</span>
+                      <p>{item.appliedOn}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">Status</span>
+                      <Badge className={getStatusColor(item.status)}>{item.status}</Badge>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-500">School</span>
+                      <p>{item.school}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Student & Parent Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium">Student Name:</span>
+                    <span>{item.student}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium">Parent Name:</span>
+                    <span>{item.parent}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium">Parent Phone:</span>
+                    <span>{item.parentPhone}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium">Parent Email:</span>
+                    <span>{item.parentEmail}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {item.remarks && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Remarks</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-700">{item.remarks}</p>
                   </CardContent>
                 </Card>
               )}
