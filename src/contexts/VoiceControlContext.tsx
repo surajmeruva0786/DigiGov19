@@ -62,6 +62,14 @@ export function VoiceControlProvider({ children }: VoiceControlProviderProps) {
         speak('Voice control disabled');
     }, [speak]);
 
+    const toggleVoice = useCallback(() => {
+        if (isVoiceEnabled) {
+            disableVoice();
+        } else {
+            enableVoice();
+        }
+    }, [isVoiceEnabled, enableVoice, disableVoice]);
+
     // Load voice preference from localStorage
     useEffect(() => {
         const savedPreference = localStorage.getItem('voiceControlEnabled');
@@ -90,14 +98,15 @@ export function VoiceControlProvider({ children }: VoiceControlProviderProps) {
         });
     }, [speak]);
 
+    // Listen for toggle voice control event from header button
+    useEffect(() => {
+        const handleToggleEvent = () => {
+            toggleVoice();
+        };
 
-    const toggleVoice = useCallback(() => {
-        if (isVoiceEnabled) {
-            disableVoice();
-        } else {
-            enableVoice();
-        }
-    }, [isVoiceEnabled, enableVoice, disableVoice]);
+        window.addEventListener('toggleVoiceControl', handleToggleEvent);
+        return () => window.removeEventListener('toggleVoiceControl', handleToggleEvent);
+    }, [toggleVoice]);
 
     const registerCommand = useCallback((command: VoiceCommand) => {
         voiceService.registerCommand(command);

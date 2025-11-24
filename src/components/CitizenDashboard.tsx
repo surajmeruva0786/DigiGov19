@@ -210,9 +210,9 @@ export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatb
               </Select>
 
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="relative hover:bg-white/50"
                   onClick={onToggleChatbot}
                 >
@@ -221,9 +221,24 @@ export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatb
               </motion.div>
 
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative hover:bg-white/50"
+                  onClick={() => {
+                    const event = new CustomEvent('toggleVoiceControl');
+                    window.dispatchEvent(event);
+                  }}
+                  title="Voice Control"
+                >
+                  <Mic className="w-5 h-5" />
+                </Button>
+              </motion.div>
+
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="relative hover:bg-white/50"
                   onClick={() => setNotificationsOpen(true)}
                 >
