@@ -53,31 +53,6 @@ export class VoiceRecognitionService {
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const transcript = event.results[i][0].transcript;
                 if (event.results[i].isFinal) {
-                    finalTranscript += transcript;
-                } else {
-                    interimTranscript += transcript;
-                }
-            }
-
-            // Emit transcription event for UI display
-            if (finalTranscript) {
-                const transcriptEvent = new CustomEvent('voiceResult', {
-                    detail: { transcript: finalTranscript.trim(), isFinal: true }
-                });
-                window.dispatchEvent(transcriptEvent);
-
-                console.log('Voice input (final):', finalTranscript.trim());
-
-                if (this.onResultCallback) {
-                    this.onResultCallback(finalTranscript.trim());
-                }
-
-                this.processCommand(finalTranscript.trim().toLowerCase());
-            }
-
-            if (interimTranscript) {
-                const transcriptEvent = new CustomEvent('voiceResult', {
-                    detail: { transcript: interimTranscript.trim(), isFinal: false }
                 });
                 window.dispatchEvent(transcriptEvent);
             }
@@ -139,7 +114,7 @@ export class VoiceRecognitionService {
             }
         }
 
-        console.log('No command matched for:', transcript);
+        // No command matched - that's okay, we still transcribe everything
     }
 
     // Public method to manually trigger command processing (for tutorial commands)
