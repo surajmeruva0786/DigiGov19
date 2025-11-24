@@ -32,6 +32,7 @@ import { ChatbotWidget } from './components/ChatbotWidget';
 import { VoiceControlProvider } from './contexts/VoiceControlContext';
 import { VoiceControlIndicator } from './components/VoiceControlIndicator';
 import { AppVoiceCommands } from './components/AppVoiceCommands';
+import { VoiceControlPanel } from './components/VoiceControlPanel';
 
 type Page =
   | 'home'
@@ -70,6 +71,7 @@ export default function App() {
   const [officialDepartment, setOfficialDepartment] = useState('');
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const toggleChatbot = () => setIsChatbotOpen(prev => !prev);
+  const [isVoiceControlOpen, setIsVoiceControlOpen] = useState(false);
 
 
 
@@ -77,6 +79,16 @@ export default function App() {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionMessage, setTransitionMessage] = useState('');
+
+  // Listen for voice control toggle event
+  useEffect(() => {
+    const handleToggleVoicePanel = () => {
+      setIsVoiceControlOpen(prev => !prev);
+    };
+
+    window.addEventListener('toggleVoiceControl', handleToggleVoicePanel);
+    return () => window.removeEventListener('toggleVoiceControl', handleToggleVoicePanel);
+  }, []);
 
   // Force light mode
   useEffect(() => {
@@ -410,6 +422,7 @@ export default function App() {
         )}
         <Toaster />
         <ChatbotWidget isOpen={isChatbotOpen} onToggle={toggleChatbot} />
+        <VoiceControlPanel isOpen={isVoiceControlOpen} onClose={() => setIsVoiceControlOpen(false)} />
         <VoiceControlIndicator />
         <AppVoiceCommands
           onNavigate={handleNavigate}
