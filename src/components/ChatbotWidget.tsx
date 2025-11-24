@@ -27,7 +27,7 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
           onClick={onToggle}
         >
           <motion.div
@@ -38,9 +38,9 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
             className="w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <Card className="glass-card border-0 shadow-2xl overflow-hidden rounded-2xl">
+            <Card className="border-0 shadow-2xl overflow-hidden rounded-2xl bg-white">
               {/* Header */}
-              <CardHeader className="p-6 border-b border-white/20">
+              <CardHeader className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <motion.div
@@ -60,7 +60,7 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
                       variant="ghost"
                       size="icon"
                       onClick={onToggle}
-                      className="hover:bg-white/50 text-gray-600"
+                      className="hover:bg-gray-100 text-gray-600"
                     >
                       <X className="w-5 h-5" />
                     </Button>
@@ -69,7 +69,7 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
               </CardHeader>
 
               {/* Chat Content */}
-              <CardContent className="p-6 h-[400px] overflow-y-auto bg-gradient-to-br from-blue-50/30 via-white/50 to-purple-50/30">
+              <CardContent className="p-6 h-[400px] overflow-y-auto bg-white">
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <motion.div
                     className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center mb-4 shadow-lg"
@@ -99,11 +99,11 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
               </CardContent>
 
               {/* Input Area */}
-              <div className="p-4 border-t border-white/20 bg-white/50 backdrop-blur-sm">
+              <div className="p-4 border-t border-gray-200 bg-white">
                 <div className="flex items-end gap-2">
                   <Textarea
                     placeholder="Type your message..."
-                    className="flex-grow resize-none min-h-[44px] max-h-[100px] bg-white/80 border-gray-200/50 rounded-xl px-4 py-2 focus:bg-white"
+                    className="flex-grow resize-none min-h-[44px] max-h-[100px] bg-gray-50 border-gray-200 rounded-xl px-4 py-2"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={(e) => {
@@ -119,7 +119,7 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="text-gray-600 hover:bg-white/50"
+                        className="text-gray-600 hover:bg-gray-100"
                         title="Attach file"
                       >
                         <Paperclip className="w-5 h-5" />
@@ -129,7 +129,7 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="text-gray-600 hover:bg-white/50"
+                        className="text-gray-600 hover:bg-gray-100"
                         title="Voice input"
                       >
                         <Mic className="w-5 h-5" />
