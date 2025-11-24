@@ -8,10 +8,6 @@ export function VoiceControlIndicator() {
     const { isVoiceEnabled, isListening, lastCommand, toggleVoice } = useVoiceControl();
     const [showHelp, setShowHelp] = useState(false);
 
-    if (!isVoiceEnabled) {
-        return null;
-    }
-
     return (
         <>
             {/* Floating Voice Indicator */}
@@ -54,13 +50,17 @@ export function VoiceControlIndicator() {
                         <Button
                             size="icon"
                             onClick={toggleVoice}
-                            className={`h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all ${isListening
-                                ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
-                                : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800'
+                            className={`h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all ${!isVoiceEnabled
+                                    ? 'bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600'
+                                    : isListening
+                                        ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
+                                        : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800'
                                 }`}
-                            title={isListening ? 'Stop listening' : 'Start listening'}
+                            title={!isVoiceEnabled ? 'Enable voice control' : isListening ? 'Stop listening' : 'Start listening'}
                         >
-                            {isListening ? (
+                            {!isVoiceEnabled ? (
+                                <MicOff className="w-6 h-6 text-white" />
+                            ) : isListening ? (
                                 <>
                                     <Mic className="w-6 h-6 text-white" />
                                     {/* Pulsing animation when listening */}
@@ -78,7 +78,7 @@ export function VoiceControlIndicator() {
                                     />
                                 </>
                             ) : (
-                                <MicOff className="w-6 h-6 text-white" />
+                                <Mic className="w-6 h-6 text-white" />
                             )}
                         </Button>
                     </motion.div>
