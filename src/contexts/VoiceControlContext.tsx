@@ -52,14 +52,14 @@ export function VoiceControlProvider({ children }: VoiceControlProviderProps) {
         setIsVoiceEnabled(true);
         localStorage.setItem('voiceControlEnabled', 'true');
         voiceService.start();
-        speak('Voice control enabled');
+        // Removed voice announcement to avoid disturbing user
     }, [speak]);
 
     const disableVoice = useCallback(() => {
         setIsVoiceEnabled(false);
         localStorage.setItem('voiceControlEnabled', 'false');
         voiceService.stop();
-        speak('Voice control disabled');
+        // Removed voice announcement to avoid disturbing user
     }, [speak]);
 
     const toggleVoice = useCallback(() => {

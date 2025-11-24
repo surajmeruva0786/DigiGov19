@@ -31,9 +31,7 @@ export function VoiceControlPanel({ isOpen, onClose }: VoiceControlPanelProps) {
 
     const handleToggleVoice = () => {
         toggleVoice();
-        if (!isVoiceEnabled) {
-            speak('Voice control activated. You can now speak commands.');
-        }
+        // Removed voice announcement to avoid disturbing user
     };
 
     const clearTranscript = () => {
@@ -256,8 +254,7 @@ export function VoiceControlPanel({ isOpen, onClose }: VoiceControlPanelProps) {
                                                             });
                                                             window.dispatchEvent(transcriptEvent);
 
-                                                            // Speak the command
-                                                            speak(`Executing: ${cmd.text}`);
+                                                            // Execute command without voice announcement
 
                                                             // Simulate voice recognition by creating a result callback
                                                             // This will trigger the registered commands in useNavigationVoiceCommands
