@@ -410,7 +410,7 @@ export default function App() {
         )}
         <Toaster />
         <ChatbotWidget isOpen={isChatbotOpen} onToggle={toggleChatbot} />
-        {isAuthenticated && <VoiceControlIndicator />}
+        <VoiceControlIndicator />
         <AppVoiceCommands
           onNavigate={handleNavigate}
           onLogout={handleLogout}
