@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Toaster } from './components/ui/sonner';
 import { AnimatePresence } from 'motion/react';
+import { useNavigationVoiceCommands } from './hooks/useNavigationVoiceCommands';
 
 // Import components
 import { RoleSelection } from './components/RoleSelection';
@@ -29,8 +30,10 @@ import { OfficialForgotPassword } from './components/OfficialForgotPassword';
 import { LoadingScreen, TransitionLoader } from './components/LoadingScreen';
 import { PageTransition } from './components/PageTransition';
 import { ChatbotWidget } from './components/ChatbotWidget';
+import { VoiceControlProvider } from './contexts/VoiceControlContext';
+import { VoiceControlIndicator } from './components/VoiceControlIndicator';
 
-type Page = 
+type Page =
   | 'home'
   | 'login'
   | 'register'
@@ -67,8 +70,15 @@ export default function App() {
   const [officialDepartment, setOfficialDepartment] = useState('');
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const toggleChatbot = () => setIsChatbotOpen(prev => !prev);
-  
-  // Loading states
+
+  // Voice commands for navigation
+  useNavigationVoiceCommands(
+    (page) => handleNavigate(page),
+    () => handleLogout(),
+    toggleChatbot
+  );
+
+  // Force light mode
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionMessage, setTransitionMessage] = useState('');
@@ -99,7 +109,7 @@ export default function App() {
   const handleLogin = () => {
     setTransitionMessage('Logging you in...');
     setIsTransitioning(true);
-    
+
     setTimeout(() => {
       setIsAuthenticated(true);
       setShowVoiceSetup(true);
@@ -110,7 +120,7 @@ export default function App() {
   const handleRegistrationComplete = () => {
     setTransitionMessage('Setting up your account...');
     setIsTransitioning(true);
-    
+
     setTimeout(() => {
       setIsAuthenticated(true);
       setShowVoiceSetup(true);
@@ -136,7 +146,7 @@ export default function App() {
   const handleOfficialLogin = (name: string, department: string) => {
     setTransitionMessage('Accessing Official Portal...');
     setIsTransitioning(true);
-    
+
     setTimeout(() => {
       setOfficialName(name);
       setOfficialDepartment(department);
@@ -170,28 +180,28 @@ export default function App() {
             <RoleSelection onNavigate={handleNavigate} />
           </PageTransition>
         );
-      
+
       case 'login':
         return (
           <PageTransition key="login">
             <Login onLogin={handleLogin} onNavigate={handleNavigate} />
           </PageTransition>
         );
-      
+
       case 'register':
         return (
           <PageTransition key="register">
             <Registration onNavigate={handleNavigate} onComplete={handleRegistrationComplete} />
           </PageTransition>
         );
-      
+
       case 'forgot-password':
         return (
           <PageTransition key="forgot-password">
             <ForgotPassword onNavigate={handleNavigate} />
           </PageTransition>
         );
-      
+
       case 'dashboard':
         return (
           <PageTransition key="dashboard">
@@ -203,91 +213,91 @@ export default function App() {
             />
           </PageTransition>
         );
-      
+
       case 'digital-id':
         return (
           <PageTransition key="digital-id">
             <DigitalIdCard userName={userName} onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
-      
+
       case 'education':
         return (
           <PageTransition key="education">
             <EducationAssistance onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
-      
+
       case 'health':
         return (
           <PageTransition key="health">
             <HealthServices onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
-      
+
       case 'feedback':
         return (
           <PageTransition key="feedback">
             <CitizenFeedback onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
-      
+
       case 'schemes':
         return (
           <PageTransition key="schemes">
             <GovernmentSchemes onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
-      
+
       case 'complaints':
         return (
           <PageTransition key="complaints">
             <Complaints onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
-      
+
       case 'applications':
         return (
           <PageTransition key="applications">
             <Applications onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
-      
+
       case 'children':
         return (
           <PageTransition key="children">
             <Children onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
-      
+
       case 'child-detail':
         return (
           <PageTransition key={`child-detail-${selectedChildId}`}>
             <ChildDetail onNavigate={handleNavigate} childId={selectedChildId} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
-      
+
       case 'bill-payments':
         return (
           <PageTransition key="bill-payments">
             <BillPayments onNavigate={handleNavigate} onToggleChatbot={toggleChatbot} />
           </PageTransition>
         );
-      
+
       case 'documents':
         return (
           <PageTransition key="documents">
             <Documents onNavigate={handleNavigate} />
           </PageTransition>
         );
-      
+
       case 'analytics':
         return (
           <PageTransition key="analytics">
             <Analytics onNavigate={handleNavigate} />
           </PageTransition>
         );
-      
+
       case 'official-login':
         return (
           <PageTransition key="official-login">
@@ -298,7 +308,7 @@ export default function App() {
             />
           </PageTransition>
         );
-      
+
       case 'official-forgot-password':
         return (
           <PageTransition key="official-forgot-password">
@@ -307,7 +317,7 @@ export default function App() {
             />
           </PageTransition>
         );
-      
+
       case 'official-dashboard':
         if (!isOfficialAuthenticated) {
           return (
@@ -330,7 +340,7 @@ export default function App() {
             />
           </PageTransition>
         );
-      
+
       case 'official-analytics':
         if (!isOfficialAuthenticated) {
           return (
@@ -352,21 +362,21 @@ export default function App() {
             />
           </PageTransition>
         );
-      
+
       case '404':
         return (
           <PageTransition key="404">
             <ErrorPage errorCode="404" onNavigate={handleNavigate} />
           </PageTransition>
         );
-      
+
       case '500':
         return (
           <PageTransition key="500">
             <ErrorPage errorCode="500" onNavigate={handleNavigate} />
           </PageTransition>
         );
-      
+
       default:
         return (
           <PageTransition key="default">
@@ -379,8 +389,8 @@ export default function App() {
   // Show initial loading screen
   if (isInitialLoading) {
     return (
-      <LoadingScreen 
-        message="Initializing DigiGov Platform..." 
+      <LoadingScreen
+        message="Initializing DigiGov Platform..."
         onComplete={() => setIsInitialLoading(false)}
         duration={2500}
       />
@@ -388,24 +398,25 @@ export default function App() {
   }
 
   return (
-    <>
+    <VoiceControlProvider>
       <div className="min-h-screen light">
         <AnimatePresence mode="wait">
           {isTransitioning && (
             <TransitionLoader message={transitionMessage} />
           )}
         </AnimatePresence>
-        
+
         <AnimatePresence mode="wait">
           {renderPage()}
         </AnimatePresence>
-        
+
         {showVoiceSetup && (
           <VoiceSetup onEnable={handleVoiceEnable} onSkip={handleVoiceSkip} />
         )}
         <Toaster />
         <ChatbotWidget isOpen={isChatbotOpen} onToggle={toggleChatbot} />
+        {isAuthenticated && <VoiceControlIndicator />}
       </div>
-    </>
+    </VoiceControlProvider>
   );
 }
