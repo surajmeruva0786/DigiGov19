@@ -47,16 +47,40 @@ export class VoiceRecognitionService {
         if (!this.recognition) return;
 
         this.recognition.onresult = (event) => {
-            const last = event.results.length - 1;
-            const transcript = event.results[last][0].transcript.trim().toLowerCase();
+            let interimTranscript = '';
+            let finalTranscript = '';
 
-            console.log('Voice input:', transcript);
-
-            if (this.onResultCallback) {
-                this.onResultCallback(transcript);
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript;
+                } else {
+                    interimTranscript += transcript;
+                }
             }
 
-            this.processCommand(transcript);
+            // Emit transcription event for UI display
+            if (finalTranscript) {
+                const transcriptEvent = new CustomEvent('voiceResult', {
+                    detail: { transcript: finalTranscript.trim(), isFinal: true }
+                });
+                window.dispatchEvent(transcriptEvent);
+
+                console.log('Voice input (final):', finalTranscript.trim());
+
+                if (this.onResultCallback) {
+                    this.onResultCallback(finalTranscript.trim());
+                }
+
+                this.processCommand(finalTranscript.trim().toLowerCase());
+            }
+
+            if (interimTranscript) {
+                const transcriptEvent = new CustomEvent('voiceResult', {
+                    detail: { transcript: interimTranscript.trim(), isFinal: false }
+                });
+                window.dispatchEvent(transcriptEvent);
+            }
         };
 
         this.recognition.onerror = (event) => {
@@ -116,6 +140,11 @@ export class VoiceRecognitionService {
         }
 
         console.log('No command matched for:', transcript);
+    }
+
+    // Public method to manually trigger command processing (for tutorial commands)
+    public executeCommand(transcript: string) {
+        this.processCommand(transcript);
     }
 
     start() {
@@ -179,9 +208,12 @@ export function getVoiceRecognitionService(): VoiceRecognitionService {
     if (!voiceServiceInstance) {
         voiceServiceInstance = new VoiceRecognitionService({
             continuous: true,
-            interimResults: false,
+            interimResults: true,  // Enable interim results for real-time transcription
             language: 'en-IN',
         });
+
+        // Expose globally for tutorial commands
+        (window as any).__voiceService = voiceServiceInstance;
     }
     return voiceServiceInstance;
 }

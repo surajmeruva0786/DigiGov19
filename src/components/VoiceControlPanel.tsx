@@ -129,8 +129,8 @@ export function VoiceControlPanel({ isOpen, onClose }: VoiceControlPanelProps) {
                                 <Button
                                     onClick={handleToggleVoice}
                                     className={`w-full ${isVoiceEnabled
-                                            ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
-                                            : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800'
+                                        ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
+                                        : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800'
                                         }`}
                                 >
                                     {isVoiceEnabled ? (
@@ -247,8 +247,24 @@ export function VoiceControlPanel({ isOpen, onClose }: VoiceControlPanelProps) {
                                                         key={cmdIdx}
                                                         className="flex items-start gap-3 p-3 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer"
                                                         onClick={() => {
-                                                            setTranscript(cmd.text);
-                                                            speak(cmd.text);
+                                                            // Add to transcript
+                                                            setTranscript(prev => prev ? `${prev} ${cmd.text}` : cmd.text);
+
+                                                            // Emit voice result event for transcription display
+                                                            const transcriptEvent = new CustomEvent('voiceResult', {
+                                                                detail: { transcript: cmd.text, isFinal: true }
+                                                            });
+                                                            window.dispatchEvent(transcriptEvent);
+
+                                                            // Speak the command
+                                                            speak(`Executing: ${cmd.text}`);
+
+                                                            // Simulate voice recognition by creating a result callback
+                                                            // This will trigger the registered commands in useNavigationVoiceCommands
+                                                            const voiceService = (window as any).__voiceService;
+                                                            if (voiceService && voiceService.processCommand) {
+                                                                voiceService.processCommand(cmd.text.toLowerCase());
+                                                            }
                                                         }}
                                                     >
                                                         <div className="w-2 h-2 rounded-full bg-blue-600 mt-2" />

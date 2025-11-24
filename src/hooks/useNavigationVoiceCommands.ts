@@ -6,8 +6,8 @@ export function useNavigationVoiceCommands(onNavigate: (page: string) => void, o
     const { registerCommands, speak, isVoiceEnabled } = useVoiceControl();
 
     useEffect(() => {
-        if (!isVoiceEnabled) return;
-
+        // Register commands regardless of voice enabled status
+        // This allows tutorial commands to work even when voice is off
         const commands: VoiceCommand[] = [
             // Dashboard navigation
             {
@@ -184,5 +184,5 @@ export function useNavigationVoiceCommands(onNavigate: (page: string) => void, o
         ];
 
         registerCommands(commands);
-    }, [isVoiceEnabled, onNavigate, onLogout, onToggleChatbot, registerCommands, speak]);
+    }, [onNavigate, onLogout, onToggleChatbot, registerCommands, speak]);
 }
