@@ -29,9 +29,9 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
           style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)'
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)'
           }}
           onClick={onToggle}
         >
