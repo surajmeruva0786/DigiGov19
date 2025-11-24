@@ -37,8 +37,9 @@ export async function sendMessageToGemini(
     chatHistory: ChatMessage[]
 ): Promise<string> {
     try {
+        // Using gemini-2.5-flash - confirmed available in your API
         const model = genAI.getGenerativeModel({
-            model: 'gemini-pro',
+            model: 'gemini-2.5-flash',
         });
 
         // Build conversation history for context
@@ -65,17 +66,6 @@ export async function sendMessageToGemini(
         return response.text();
     } catch (error: any) {
         console.error('Error calling Gemini API:', error);
-        console.error('Error details:', error.message);
-
-        // Provide more helpful error message
-        if (error.message?.includes('404') || error.message?.includes('not found')) {
-            return 'I apologize, but I\'m currently experiencing technical difficulties. The AI service may be temporarily unavailable. Please try again in a moment, or contact support if the issue persists.';
-        }
-
-        if (error.message?.includes('API key')) {
-            return 'There seems to be an issue with the API configuration. Please contact support.';
-        }
-
         return 'I apologize, but I encountered an error processing your request. Please try again.';
     }
 }
