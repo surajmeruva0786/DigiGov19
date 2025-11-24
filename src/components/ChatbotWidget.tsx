@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, Paperclip, Mic, MessageSquareText } from 'lucide-react';
+import { X, Send, Paperclip, Mic, MessageSquareText, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { ScrollArea } from './ui/scroll-area';
+import { sendMessageToGemini, getWelcomeMessage, getSuggestedQuestions, ChatMessage } from '../lib/gemini';
 
 interface ChatbotWidgetProps {
   isOpen: boolean;
@@ -12,12 +13,67 @@ interface ChatbotWidgetProps {
 
 export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
   const [message, setMessage] = useState('');
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      console.log('Sending message:', message);
-      setMessage('');
+  // Initialize with welcome message
+  useEffect(() => {
+    if (isOpen && chatHistory.length === 0) {
+      setChatHistory([{
+        role: 'assistant',
+        content: getWelcomeMessage(),
+        timestamp: new Date(),
+      }]);
     }
+  }, [isOpen]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    }
+  }, [chatHistory]);
+
+  const handleSendMessage = async () => {
+    if (!message.trim() || isLoading) return;
+
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: message.trim(),
+      timestamp: new Date(),
+    };
+
+    setChatHistory(prev => [...prev, userMessage]);
+    setMessage('');
+    setIsLoading(true);
+
+    try {
+      const response = await sendMessageToGemini(message.trim(), chatHistory);
+      const assistantMessage: ChatMessage = {
+        role: 'assistant',
+        content: response,
+        timestamp: new Date(),
+      };
+      setChatHistory(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      const errorMessage: ChatMessage = {
+        role: 'assistant',
+        content: 'I apologize, but I encountered an error. Please try again or contact support if the issue persists.',
+        timestamp: new Date(),
+      };
+      setChatHistory(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSuggestedQuestion = (question: string) => {
+    setMessage(question);
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
@@ -53,8 +109,8 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
                     <MessageSquareText className="w-5 h-5 text-white" />
                   </motion.div>
                   <div>
-                    <h2 className="text-xl">DigiGov Assistant</h2>
-                    <p className="text-sm text-gray-500">Always here to help</p>
+                    <h2 className="text-xl font-semibold">DigiGov Assistant</h2>
+                    <p className="text-sm text-gray-500">Powered by AI</p>
                   </div>
                 </div>
                 <Button
@@ -69,23 +125,59 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
             </div>
 
             {/* Chat Content */}
-            <ScrollArea className="flex-1">
-              <div className="p-6">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-center py-12"
-                >
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <MessageSquareText className="w-10 h-10 text-blue-600" />
+            <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+              <div className="space-y-4">
+                {chatHistory.map((msg, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className={`max-w-[80%] ${msg.role === 'user' ? 'order-2' : 'order-1'}`}>
+                      <div
+                        className={`rounded-2xl px-4 py-2 ${msg.role === 'user'
+                            ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
+                            : 'bg-gray-100 text-gray-900'
+                          }`}
+                      >
+                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                      <p className={`text-xs text-gray-500 mt-1 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
+                        {formatTime(msg.timestamp)}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+
+                {isLoading && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex justify-start"
+                  >
+                    <div className="bg-gray-100 rounded-2xl px-4 py-3">
+                      <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Suggested Questions */}
+                {chatHistory.length === 1 && !isLoading && (
+                  <div className="space-y-2 mt-4">
+                    <p className="text-xs text-gray-500 font-medium">Suggested questions:</p>
+                    {getSuggestedQuestions().map((question, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleSuggestedQuestion(question)}
+                        className="block w-full text-left text-sm px-4 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors"
+                      >
+                        {question}
+                      </button>
+                    ))}
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Welcome to DigiGov Assistant!
-                  </h3>
-                  <p className="text-sm text-gray-600 max-w-xs mx-auto">
-                    I'm here to help you with government services, schemes, and answer your questions.
-                  </p>
-                </motion.div>
+                )}
               </div>
             </ScrollArea>
 
@@ -93,7 +185,7 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
             <div className="p-4 border-t bg-gray-50">
               <div className="flex items-end gap-2">
                 <Textarea
-                  placeholder="Type your message..."
+                  placeholder="Ask about government services..."
                   className="flex-grow resize-none min-h-[44px] max-h-[100px] bg-white border-gray-200 rounded-xl px-4 py-2"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
@@ -104,6 +196,7 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
                     }
                   }}
                   rows={1}
+                  disabled={isLoading}
                 />
                 <div className="flex gap-1">
                   <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
@@ -112,6 +205,7 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
                       variant="ghost"
                       className="text-gray-600 hover:bg-gray-100"
                       title="Attach file"
+                      disabled
                     >
                       <Paperclip className="w-5 h-5" />
                     </Button>
@@ -122,6 +216,7 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
                       variant="ghost"
                       className="text-gray-600 hover:bg-gray-100"
                       title="Voice input"
+                      disabled
                     >
                       <Mic className="w-5 h-5" />
                     </Button>
@@ -130,10 +225,15 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
                     <Button
                       size="icon"
                       onClick={handleSendMessage}
-                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl shadow-lg"
+                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl shadow-lg disabled:opacity-50"
                       title="Send message"
+                      disabled={isLoading || !message.trim()}
                     >
-                      <Send className="w-4 h-4" />
+                      {isLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4" />
+                      )}
                     </Button>
                   </motion.div>
                 </div>
