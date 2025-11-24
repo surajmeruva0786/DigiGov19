@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, Paperclip, Mic } from 'lucide-react';
+import { X, Send, Paperclip, Mic, MessageSquareText } from 'lucide-react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -27,35 +27,83 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
           onClick={onToggle}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="w-[90vw] sm:w-[450px] h-[70vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the widget
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
           >
-            <Card className="flex flex-col flex-grow border-0 shadow-2xl bg-white/90 backdrop-blur-md overflow-hidden rounded-2xl">
-              <CardHeader className="flex flex-row items-center justify-between p-4 border-b bg-white/80">
-                <CardTitle className="text-lg font-semibold text-gray-800">Chatbot</CardTitle>
-                <Button variant="ghost" size="icon" onClick={onToggle}>
-                  <X className="w-5 h-5 text-gray-500" />
-                </Button>
+            <Card className="glass-card border-0 shadow-2xl overflow-hidden rounded-2xl">
+              {/* Header */}
+              <CardHeader className="p-6 border-b border-white/20">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <motion.div
+                      className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg"
+                      whileHover={{ rotate: 360 }}
+                      transition={{ duration: 0.6 }}
+                    >
+                      <MessageSquareText className="w-6 h-6 text-white" />
+                    </motion.div>
+                    <div>
+                      <CardTitle className="text-lg text-gray-900">DigiGov Assistant</CardTitle>
+                      <p className="text-xs text-gray-500">Always here to help</p>
+                    </div>
+                  </div>
+                  <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={onToggle}
+                      className="hover:bg-white/50 text-gray-600"
+                    >
+                      <X className="w-5 h-5" />
+                    </Button>
+                  </motion.div>
+                </div>
               </CardHeader>
-              <CardContent className="flex-grow p-4 overflow-y-auto">
-                {/* Chat display area - currently empty */}
-                <div className="text-sm text-gray-500 text-center py-4">
-                  Start a conversation!
+
+              {/* Chat Content */}
+              <CardContent className="p-6 h-[400px] overflow-y-auto bg-gradient-to-br from-blue-50/30 via-white/50 to-purple-50/30">
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                  <motion.div
+                    className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center mb-4 shadow-lg"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2, type: 'spring' }}
+                  >
+                    <MessageSquareText className="w-10 h-10 text-blue-600" />
+                  </motion.div>
+                  <motion.h3
+                    className="text-lg font-semibold text-gray-900 mb-2"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    Welcome to DigiGov Assistant!
+                  </motion.h3>
+                  <motion.p
+                    className="text-sm text-gray-600 max-w-xs"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    I'm here to help you with government services, schemes, and answer your questions.
+                  </motion.p>
                 </div>
               </CardContent>
-              <div className="p-4 border-t bg-white/80">
-                <div className="relative flex items-center">
+
+              {/* Input Area */}
+              <div className="p-4 border-t border-white/20 bg-white/50 backdrop-blur-sm">
+                <div className="flex items-end gap-2">
                   <Textarea
                     placeholder="Type your message..."
-                    className="flex-grow resize-none min-h-[40px] max-h-[100px] bg-gray-50 border-gray-200 rounded-full pl-4 pr-24"
+                    className="flex-grow resize-none min-h-[44px] max-h-[100px] bg-white/80 border-gray-200/50 rounded-xl px-4 py-2 focus:bg-white"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={(e) => {
@@ -64,17 +112,39 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
                         handleSendMessage();
                       }
                     }}
+                    rows={1}
                   />
-                  <div className="absolute right-2 flex items-center">
-                    <Button size="icon" variant="ghost" className="text-gray-600">
-                      <Paperclip className="w-5 h-5" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="text-gray-600">
-                      <Mic className="w-5 h-5" />
-                    </Button>
-                    <Button size="icon" onClick={handleSendMessage} className="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-8 h-8">
-                      <Send className="w-4 h-4" />
-                    </Button>
+                  <div className="flex gap-1">
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="text-gray-600 hover:bg-white/50"
+                        title="Attach file"
+                      >
+                        <Paperclip className="w-5 h-5" />
+                      </Button>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="text-gray-600 hover:bg-white/50"
+                        title="Voice input"
+                      >
+                        <Mic className="w-5 h-5" />
+                      </Button>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button
+                        size="icon"
+                        onClick={handleSendMessage}
+                        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl shadow-lg"
+                        title="Send message"
+                      >
+                        <Send className="w-4 h-4" />
+                      </Button>
+                    </motion.div>
                   </div>
                 </div>
               </div>
