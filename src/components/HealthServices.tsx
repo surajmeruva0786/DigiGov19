@@ -432,6 +432,7 @@ export function HealthServices({ userName = 'Rajesh Kumar', onNavigate, onToggle
               <Label htmlFor="blood-group">Blood Group</Label>
               <select
                 id="blood-group"
+                name="blood-group"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 required
               >
@@ -460,6 +461,7 @@ export function HealthServices({ userName = 'Rajesh Kumar', onNavigate, onToggle
               <Label htmlFor="donor-location">Location (City)</Label>
               <select
                 id="donor-location"
+                name="donor-location"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 required
               >
@@ -476,6 +478,7 @@ export function HealthServices({ userName = 'Rajesh Kumar', onNavigate, onToggle
               <Label htmlFor="donor-availability">Availability</Label>
               <select
                 id="donor-availability"
+                name="donor-availability"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 required
               >
@@ -594,6 +597,7 @@ export function HealthServices({ userName = 'Rajesh Kumar', onNavigate, onToggle
                 <Label htmlFor="urgency">Urgency Level</Label>
                 <select
                   id="urgency"
+                  name="urgency"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   required
                 >

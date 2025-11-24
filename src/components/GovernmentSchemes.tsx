@@ -512,7 +512,7 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="gender">Gender *</Label>
-                  <Select required>
+                  <Select name="gender" required>
                     <SelectTrigger id="gender">
                       <SelectValue placeholder="Select gender" />
                     </SelectTrigger>
@@ -544,7 +544,7 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="state">State *</Label>
-                  <Select required>
+                  <Select name="state" required>
                     <SelectTrigger id="state">
                       <SelectValue placeholder="Select state" />
                     </SelectTrigger>
@@ -575,7 +575,7 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="category">Category *</Label>
-                    <Select required>
+                    <Select name="category" required>
                       <SelectTrigger id="category">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
@@ -615,7 +615,7 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="year">Current Year *</Label>
-                    <Select required>
+                    <Select name="year" required>
                       <SelectTrigger id="year">
                         <SelectValue placeholder="Select year" />
                       </SelectTrigger>

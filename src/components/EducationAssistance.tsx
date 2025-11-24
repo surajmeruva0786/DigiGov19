@@ -447,6 +447,7 @@ export function EducationAssistance({ userName = 'Rajesh Kumar', onNavigate, onT
                   <Label htmlFor="class-year">Current Class/Year *</Label>
                   <select
                     id="class-year"
+                    name="class-year"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     required
                   >
@@ -492,6 +493,7 @@ export function EducationAssistance({ userName = 'Rajesh Kumar', onNavigate, onT
                   <Label htmlFor="category">Category *</Label>
                   <select
                     id="category"
+                    name="category"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     required
                   >
