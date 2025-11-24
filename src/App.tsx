@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Toaster } from './components/ui/sonner';
 import { AnimatePresence } from 'motion/react';
-import { useNavigationVoiceCommands } from './hooks/useNavigationVoiceCommands';
 
 // Import components
 import { RoleSelection } from './components/RoleSelection';
@@ -32,6 +31,7 @@ import { PageTransition } from './components/PageTransition';
 import { ChatbotWidget } from './components/ChatbotWidget';
 import { VoiceControlProvider } from './contexts/VoiceControlContext';
 import { VoiceControlIndicator } from './components/VoiceControlIndicator';
+import { AppVoiceCommands } from './components/AppVoiceCommands';
 
 type Page =
   | 'home'
@@ -71,12 +71,7 @@ export default function App() {
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const toggleChatbot = () => setIsChatbotOpen(prev => !prev);
 
-  // Voice commands for navigation
-  useNavigationVoiceCommands(
-    (page) => handleNavigate(page),
-    () => handleLogout(),
-    toggleChatbot
-  );
+
 
   // Force light mode
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -416,6 +411,11 @@ export default function App() {
         <Toaster />
         <ChatbotWidget isOpen={isChatbotOpen} onToggle={toggleChatbot} />
         {isAuthenticated && <VoiceControlIndicator />}
+        <AppVoiceCommands
+          onNavigate={handleNavigate}
+          onLogout={handleLogout}
+          onToggleChatbot={toggleChatbot}
+        />
       </div>
     </VoiceControlProvider>
   );

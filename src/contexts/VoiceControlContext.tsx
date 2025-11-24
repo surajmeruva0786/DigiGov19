@@ -33,13 +33,42 @@ export function VoiceControlProvider({ children }: VoiceControlProviderProps) {
     const [lastCommand, setLastCommand] = useState('');
     const voiceService = getVoiceRecognitionService();
 
+    const speak = useCallback((text: string) => {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-IN';
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+    }, []);
+
+    const enableVoice = useCallback(() => {
+        if (!voiceService.isSupported()) {
+            alert('Voice recognition is not supported in your browser. Please use Chrome or Edge.');
+            return;
+        }
+
+        setIsVoiceEnabled(true);
+        localStorage.setItem('voiceControlEnabled', 'true');
+        voiceService.start();
+        speak('Voice control enabled');
+    }, [speak]);
+
+    const disableVoice = useCallback(() => {
+        setIsVoiceEnabled(false);
+        localStorage.setItem('voiceControlEnabled', 'false');
+        voiceService.stop();
+        speak('Voice control disabled');
+    }, [speak]);
+
     // Load voice preference from localStorage
     useEffect(() => {
         const savedPreference = localStorage.getItem('voiceControlEnabled');
         if (savedPreference === 'true') {
             enableVoice();
         }
-    }, []);
+    }, [enableVoice]);
 
     // Setup voice service callbacks
     useEffect(() => {
@@ -59,26 +88,8 @@ export function VoiceControlProvider({ children }: VoiceControlProviderProps) {
                 speak('Microphone access denied. Voice control disabled.');
             }
         });
-    }, []);
+    }, [speak]);
 
-    const enableVoice = useCallback(() => {
-        if (!voiceService.isSupported()) {
-            alert('Voice recognition is not supported in your browser. Please use Chrome or Edge.');
-            return;
-        }
-
-        setIsVoiceEnabled(true);
-        localStorage.setItem('voiceControlEnabled', 'true');
-        voiceService.start();
-        speak('Voice control enabled');
-    }, []);
-
-    const disableVoice = useCallback(() => {
-        setIsVoiceEnabled(false);
-        localStorage.setItem('voiceControlEnabled', 'false');
-        voiceService.stop();
-        speak('Voice control disabled');
-    }, []);
 
     const toggleVoice = useCallback(() => {
         if (isVoiceEnabled) {
@@ -94,16 +105,6 @@ export function VoiceControlProvider({ children }: VoiceControlProviderProps) {
 
     const registerCommands = useCallback((commands: VoiceCommand[]) => {
         voiceService.registerCommands(commands);
-    }, []);
-
-    const speak = useCallback((text: string) => {
-        if ('speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-IN';
-            utterance.rate = 1.0;
-            utterance.pitch = 1.0;
-            window.speechSynthesis.speak(utterance);
-        }
     }, []);
 
     const value: VoiceControlContextType = {
