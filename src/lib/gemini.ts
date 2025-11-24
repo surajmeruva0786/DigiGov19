@@ -48,10 +48,13 @@ export async function sendMessageToGemini(
         });
 
         // Build conversation history for context
-        const history = chatHistory.map(msg => ({
-            role: msg.role === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.content }],
-        }));
+        // Filter out the welcome message and convert to Gemini format
+        const history = chatHistory
+            .filter(msg => msg.content !== getWelcomeMessage()) // Remove welcome message
+            .map(msg => ({
+                role: msg.role === 'user' ? 'user' : 'model',
+                parts: [{ text: msg.content }],
+            }));
 
         const chat = model.startChat({
             history: history,
@@ -63,8 +66,13 @@ export async function sendMessageToGemini(
             },
         });
 
-        // Send the message with system prompt context
-        const result = await chat.sendMessage(`${SYSTEM_PROMPT}\n\nUser: ${message}`);
+        // Send the message with system prompt prepended only on first user message
+        const isFirstMessage = history.length === 0;
+        const messageToSend = isFirstMessage
+            ? `${SYSTEM_PROMPT}\n\nUser Question: ${message}`
+            : message;
+
+        const result = await chat.sendMessage(messageToSend);
         const response = await result.response;
         return response.text();
     } catch (error) {
