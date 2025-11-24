@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Send, Paperclip, Mic, MessageSquareText, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { ScrollArea } from './ui/scroll-area';
 import { sendMessageToGemini, getWelcomeMessage, getSuggestedQuestions, ChatMessage } from '../lib/gemini';
 
 interface ChatbotWidgetProps {
@@ -33,7 +32,7 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
-  }, [chatHistory]);
+  }, [chatHistory, isLoading]);
 
   const handleSendMessage = async () => {
     if (!message.trim() || isLoading) return;
@@ -76,6 +75,47 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
     return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Format message content with proper structure
+  const formatMessageContent = (content: string) => {
+    // Split by double newlines for paragraphs
+    const paragraphs = content.split('\n\n');
+
+    return paragraphs.map((para, idx) => {
+      // Check if it's a numbered list
+      if (para.match(/^\d+\./m)) {
+        const items = para.split('\n').filter(line => line.trim());
+        return (
+          <ol key={idx} className="list-decimal list-inside space-y-1 my-2">
+            {items.map((item, i) => (
+              <li key={i} className="text-sm">{item.replace(/^\d+\.\s*/, '')}</li>
+            ))}
+          </ol>
+        );
+      }
+
+      // Check if it's a bulleted list
+      if (para.match(/^[-*•]/m)) {
+        const items = para.split('\n').filter(line => line.trim());
+        return (
+          <ul key={idx} className="list-disc list-inside space-y-1 my-2">
+            {items.map((item, i) => (
+              <li key={i} className="text-sm">{item.replace(/^[-*•]\s*/, '')}</li>
+            ))}
+          </ul>
+        );
+      }
+
+      // Check if it's a heading (starts with **)
+      if (para.match(/^\*\*.*\*\*/)) {
+        const heading = para.replace(/\*\*/g, '');
+        return <h4 key={idx} className="font-semibold text-sm mt-3 mb-1">{heading}</h4>;
+      }
+
+      // Regular paragraph
+      return <p key={idx} className="text-sm mb-2">{para}</p>;
+    });
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -98,7 +138,7 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
             className="fixed right-0 top-0 h-full w-full sm:w-[480px] bg-white shadow-2xl z-50 flex flex-col"
           >
             {/* Header */}
-            <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50">
+            <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <motion.div
@@ -124,69 +164,81 @@ export function ChatbotWidget({ isOpen, onToggle }: ChatbotWidgetProps) {
               </div>
             </div>
 
-            {/* Chat Content */}
-            <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-              <div className="space-y-4">
-                {chatHistory.map((msg, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div className={`max-w-[80%] ${msg.role === 'user' ? 'order-2' : 'order-1'}`}>
-                      <div
-                        className={`rounded-2xl px-4 py-2 ${msg.role === 'user'
-                            ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
-                            : 'bg-gray-100 text-gray-900'
-                          }`}
-                      >
+            {/* Chat Content - Fixed height with scroll */}
+            <div
+              ref={scrollAreaRef}
+              className="flex-1 overflow-y-auto p-4 space-y-4"
+              style={{ maxHeight: 'calc(100vh - 200px)' }}
+            >
+              {chatHistory.map((msg, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className={`max-w-[85%] ${msg.role === 'user' ? 'order-2' : 'order-1'}`}>
+                    <div
+                      className={`rounded-2xl px-4 py-3 ${msg.role === 'user'
+                          ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
+                          : 'bg-gray-100 text-gray-900'
+                        }`}
+                    >
+                      {msg.role === 'user' ? (
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                      </div>
-                      <p className={`text-xs text-gray-500 mt-1 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
-                        {formatTime(msg.timestamp)}
-                      </p>
+                      ) : (
+                        <div className="space-y-1">
+                          {formatMessageContent(msg.content)}
+                        </div>
+                      )}
                     </div>
-                  </motion.div>
-                ))}
-
-                {isLoading && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex justify-start"
-                  >
-                    <div className="bg-gray-100 rounded-2xl px-4 py-3">
-                      <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Suggested Questions */}
-                {chatHistory.length === 1 && !isLoading && (
-                  <div className="space-y-2 mt-4">
-                    <p className="text-xs text-gray-500 font-medium">Suggested questions:</p>
-                    {getSuggestedQuestions().map((question, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleSuggestedQuestion(question)}
-                        className="block w-full text-left text-sm px-4 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors"
-                      >
-                        {question}
-                      </button>
-                    ))}
+                    <p className={`text-xs text-gray-500 mt-1 px-1 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
+                      {formatTime(msg.timestamp)}
+                    </p>
                   </div>
-                )}
-              </div>
-            </ScrollArea>
+                </motion.div>
+              ))}
 
-            {/* Input Area */}
-            <div className="p-4 border-t bg-gray-50">
+              {isLoading && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex justify-start"
+                >
+                  <div className="bg-gray-100 rounded-2xl px-4 py-3 flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                    <span className="text-sm text-gray-600">Thinking...</span>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Suggested Questions */}
+              {chatHistory.length === 1 && !isLoading && (
+                <div className="space-y-2 mt-4">
+                  <p className="text-xs text-gray-500 font-medium px-1">Try asking:</p>
+                  {getSuggestedQuestions().map((question, index) => (
+                    <motion.button
+                      key={index}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.5 + index * 0.1 }}
+                      onClick={() => handleSuggestedQuestion(question)}
+                      className="block w-full text-left text-sm px-4 py-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors border border-blue-100"
+                    >
+                      {question}
+                    </motion.button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Input Area - Fixed at bottom */}
+            <div className="p-4 border-t bg-gray-50 flex-shrink-0">
               <div className="flex items-end gap-2">
                 <Textarea
                   placeholder="Ask about government services..."
-                  className="flex-grow resize-none min-h-[44px] max-h-[100px] bg-white border-gray-200 rounded-xl px-4 py-2"
+                  className="flex-grow resize-none min-h-[44px] max-h-[100px] bg-white border-gray-200 rounded-xl px-4 py-2.5 text-sm"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   onKeyPress={(e) => {
