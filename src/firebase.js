@@ -677,8 +677,15 @@ export async function getUserSchemeApplications(userId) {
     );
     const snap = await getDocs(q);
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    console.log(`✅ Fetched ${items.length} scheme applications for user ${safeUid}`);
     return buildResponse(true, 'Scheme applications fetched', items);
   } catch (error) {
+    console.error('❌ Error fetching scheme applications:', {
+      code: error.code,
+      message: error.message,
+      userId: userId,
+      hint: error.code === 'failed-precondition' ? 'Missing Firestore index. Check console for index creation link.' : ''
+    });
     return buildResponse(false, parseFirebaseError(error), null);
   }
 }
@@ -975,8 +982,15 @@ export async function getUserDonorRegistrations(userId) {
     );
     const snap = await getDocs(q);
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    console.log(`✅ Fetched ${items.length} donor registrations for user ${safeUid}`);
     return buildResponse(true, 'Donor registrations fetched', items);
   } catch (error) {
+    console.error('❌ Error fetching donor registrations:', {
+      code: error.code,
+      message: error.message,
+      userId: userId,
+      hint: error.code === 'failed-precondition' ? 'Missing Firestore index. Check console for index creation link.' : ''
+    });
     return buildResponse(false, parseFirebaseError(error), null);
   }
 }
@@ -1047,8 +1061,15 @@ export async function getUserHealthRequests(userId) {
     );
     const snap = await getDocs(q);
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    console.log(`✅ Fetched ${items.length} health requests for user ${safeUid}`);
     return buildResponse(true, 'Health requests fetched', items);
   } catch (error) {
+    console.error('❌ Error fetching health requests:', {
+      code: error.code,
+      message: error.message,
+      userId: userId,
+      hint: error.code === 'failed-precondition' ? 'Missing Firestore index. Check console for index creation link.' : ''
+    });
     return buildResponse(false, parseFirebaseError(error), null);
   }
 }
@@ -1132,8 +1153,15 @@ export async function getUserScholarshipApplications(userId) {
     );
     const snap = await getDocs(q);
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    console.log(`✅ Fetched ${items.length} scholarship applications for user ${safeUid}`);
     return buildResponse(true, 'Scholarship applications fetched', items);
   } catch (error) {
+    console.error('❌ Error fetching scholarship applications:', {
+      code: error.code,
+      message: error.message,
+      userId: userId,
+      hint: error.code === 'failed-precondition' ? 'Missing Firestore index. Check console for index creation link.' : ''
+    });
     return buildResponse(false, parseFirebaseError(error), null);
   }
 }

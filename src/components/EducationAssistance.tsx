@@ -422,19 +422,19 @@ export function EducationAssistance({ userName = 'Rajesh Kumar', onNavigate, onT
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="student-name">Full Name *</Label>
-                  <Input id="student-name" defaultValue={userName} required />
+                  <Input id="student-name" name="student-name" defaultValue={userName} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="student-email">Email Address *</Label>
-                  <Input id="student-email" type="email" required />
+                  <Input id="student-email" name="student-email" type="email" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="student-phone">Phone Number *</Label>
-                  <Input id="student-phone" type="tel" placeholder="+91 98765 43210" required />
+                  <Input id="student-phone" name="student-phone" type="tel" placeholder="+91 98765 43210" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="student-dob">Date of Birth *</Label>
-                  <Input id="student-dob" type="date" required />
+                  <Input id="student-dob" name="student-dob" type="date" required />
                 </div>
               </div>
             </div>
@@ -464,15 +464,15 @@ export function EducationAssistance({ userName = 'Rajesh Kumar', onNavigate, onT
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="institution">Institution Name *</Label>
-                  <Input id="institution" placeholder="Enter institution name" required />
+                  <Input id="institution" name="institution" placeholder="Enter institution name" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="percentage">Percentage/CGPA *</Label>
-                  <Input id="percentage" placeholder="e.g., 85% or 8.5 CGPA" required />
+                  <Input id="percentage" name="percentage" placeholder="e.g., 85% or 8.5 CGPA" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="course">Course Pursuing *</Label>
-                  <Input id="course" placeholder="e.g., B.Tech Computer Science" required />
+                  <Input id="course" name="course" placeholder="e.g., B.Tech Computer Science" required />
                 </div>
               </div>
             </div>

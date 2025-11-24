@@ -496,19 +496,19 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="full-name">Full Name *</Label>
-                  <Input id="full-name" placeholder="Enter your full name" required />
+                  <Input id="full-name" name="full-name" placeholder="Enter your full name" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address *</Label>
-                  <Input id="email" type="email" placeholder="your.email@example.com" required />
+                  <Input id="email" name="email" type="email" placeholder="your.email@example.com" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number *</Label>
-                  <Input id="phone" type="tel" placeholder="+91 98765 43210" required />
+                  <Input id="phone" name="phone" type="tel" placeholder="+91 98765 43210" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="dob">Date of Birth *</Label>
-                  <Input id="dob" type="date" required />
+                  <Input id="dob" name="dob" type="date" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="gender">Gender *</Label>
@@ -525,7 +525,7 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="aadhaar">Aadhaar Number *</Label>
-                  <Input id="aadhaar" placeholder="XXXX XXXX XXXX" required />
+                  <Input id="aadhaar" name="aadhaar" placeholder="XXXX XXXX XXXX" required />
                 </div>
               </div>
             </div>
@@ -536,11 +536,11 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="address">Full Address *</Label>
-                  <Textarea id="address" placeholder="Enter your complete address" required rows={3} />
+                  <Textarea id="address" name="address" placeholder="Enter your complete address" required rows={3} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="city">City *</Label>
-                  <Input id="city" placeholder="Enter city" required />
+                  <Input id="city" name="city" placeholder="Enter city" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="state">State *</Label>
@@ -559,7 +559,7 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="pincode">PIN Code *</Label>
-                  <Input id="pincode" placeholder="400001" required />
+                  <Input id="pincode" name="pincode" placeholder="400001" required />
                 </div>
               </div>
             </div>
@@ -571,7 +571,7 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="family-income">Annual Family Income *</Label>
-                    <Input id="family-income" placeholder="₹3,00,000" required />
+                    <Input id="family-income" name="family-income" placeholder="₹3,00,000" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="category">Category *</Label>
@@ -590,11 +590,11 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="bank-account">Bank Account Number *</Label>
-                    <Input id="bank-account" placeholder="Enter account number" required />
+                    <Input id="bank-account" name="bank-account" placeholder="Enter account number" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="ifsc">IFSC Code *</Label>
-                    <Input id="ifsc" placeholder="Enter IFSC code" required />
+                    <Input id="ifsc" name="ifsc" placeholder="Enter IFSC code" required />
                   </div>
                 </div>
               </div>
@@ -607,11 +607,11 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="institution">Institution Name *</Label>
-                    <Input id="institution" placeholder="Enter institution name" required />
+                    <Input id="institution" name="institution" placeholder="Enter institution name" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="course">Course Pursuing *</Label>
-                    <Input id="course" placeholder="e.g., B.Tech Computer Science" required />
+                    <Input id="course" name="course" placeholder="e.g., B.Tech Computer Science" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="year">Current Year *</Label>
@@ -629,7 +629,7 @@ export function GovernmentSchemes({ onNavigate, onToggleChatbot }: GovernmentSch
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="percentage">Percentage/CGPA *</Label>
-                    <Input id="percentage" placeholder="85% or 8.5 CGPA" required />
+                    <Input id="percentage" name="percentage" placeholder="85% or 8.5 CGPA" required />
                   </div>
                 </div>
               </div>

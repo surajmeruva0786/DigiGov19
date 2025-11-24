@@ -425,7 +425,7 @@ export function HealthServices({ userName = 'Rajesh Kumar', onNavigate, onToggle
           <form onSubmit={handleDonorSubmit} className="space-y-6 mt-4">
             <div className="space-y-2">
               <Label htmlFor="donor-name">Full Name</Label>
-              <Input id="donor-name" defaultValue={userName} required />
+              <Input id="donor-name" name="donor-name" defaultValue={userName} required />
             </div>
 
             <div className="space-y-2">
@@ -448,12 +448,12 @@ export function HealthServices({ userName = 'Rajesh Kumar', onNavigate, onToggle
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="donor-age">Age</Label>
-                <Input id="donor-age" type="number" min="18" max="65" required />
+                <Input id="donor-age" name="donor-age" type="number" min="18" max="65" required />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="donor-contact">Contact Number</Label>
-                <Input id="donor-contact" type="tel" placeholder="+91 98765 43210" required />
+                <Input id="donor-contact" name="donor-contact" type="tel" placeholder="+91 98765 43210" required />
               </div>
             </div>
 
@@ -550,7 +550,7 @@ export function HealthServices({ userName = 'Rajesh Kumar', onNavigate, onToggle
           <form onSubmit={handleRequestSubmit} className="space-y-6 mt-4">
             <div className="space-y-2">
               <Label htmlFor="patient-name">Patient Name</Label>
-              <Input id="patient-name" required />
+              <Input id="patient-name" name="patient-name" required />
             </div>
 
             <div className="space-y-2">
@@ -589,7 +589,7 @@ export function HealthServices({ userName = 'Rajesh Kumar', onNavigate, onToggle
 
             <div className="space-y-2">
               <Label htmlFor="hospital">Hospital</Label>
-              <Input id="hospital" placeholder="Enter hospital name" required />
+              <Input id="hospital" name="hospital" placeholder="Enter hospital name" required />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -612,7 +612,7 @@ export function HealthServices({ userName = 'Rajesh Kumar', onNavigate, onToggle
 
               <div className="space-y-2">
                 <Label htmlFor="required-by">Required By</Label>
-                <Input id="required-by" type="date" required />
+                <Input id="required-by" name="required-by" type="date" required />
               </div>
             </div>
 
