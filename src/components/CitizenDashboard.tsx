@@ -247,9 +247,13 @@ export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatb
                     <Badge className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center p-0 bg-gradient-to-r from-red-500 to-pink-500 border-0">
                       {unreadCount}
                     </Badge>
-        onMarkAllAsRead={handleMarkAllAsRead}
-                  onDelete={handleDeleteNotification}
-      />
-                </div>
-                );
+                  )}
+                </Button>
+              </motion.div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
 }
