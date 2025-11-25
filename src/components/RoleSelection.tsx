@@ -10,24 +10,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
-import { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface RoleSelectionProps {
   onNavigate: (page: string) => void;
 }
 
 export function RoleSelection({ onNavigate }: RoleSelectionProps) {
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
-  
+  const { language, setLanguage, t } = useLanguage();
+
   const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'hi', name: 'हिंदी' },
-    { code: 'bn', name: 'বাংলা' },
-    { code: 'te', name: 'తెలుగు' },
-    { code: 'mr', name: 'मराठी' },
-    { code: 'ta', name: 'தமிழ்' },
-    { code: 'ur', name: 'اردو' },
-    { code: 'gu', name: 'ગુજરાતી' },
+    { code: 'EN', name: 'English' },
+    { code: 'HI', name: 'हिंदी' },
+    // { code: 'bn', name: 'বাংলা' },
+    // { code: 'te', name: 'తెలుగు' },
+    // { code: 'mr', name: 'मराठी' },
+    // { code: 'ta', name: 'தமிழ்' },
+    // { code: 'ur', name: 'اردو' },
+    // { code: 'gu', name: 'ગુજરાતી' },
   ];
 
   return (
@@ -55,7 +55,7 @@ export function RoleSelection({ onNavigate }: RoleSelectionProps) {
               <Building2 className="w-8 h-8 text-white" />
             </motion.div>
             <div className="text-white">
-              <h2 className="text-xl">Digital India Initiative</h2>
+              <h2 className="text-xl">{t('home.title')}</h2>
             </div>
           </div>
 
@@ -66,7 +66,7 @@ export function RoleSelection({ onNavigate }: RoleSelectionProps) {
             transition={{ delay: 0.3 }}
             className="flex items-center gap-2"
           >
-            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+            <Select value={language} onValueChange={(val: any) => setLanguage(val)}>
               <SelectTrigger className="w-[160px] glass-card text-white border-white/20">
                 <Globe className="w-4 h-4 mr-2" />
                 <SelectValue placeholder="English" className="text-white" />
@@ -97,7 +97,7 @@ export function RoleSelection({ onNavigate }: RoleSelectionProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5, duration: 0.8 }}
           >
-            Government Service Portal
+            {t('home.hero.title')}
           </motion.h1>
           <motion.p
             className="text-blue-100 text-xl md:text-2xl mb-8"
@@ -105,7 +105,7 @@ export function RoleSelection({ onNavigate }: RoleSelectionProps) {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.7 }}
           >
-            सेवा आपकी, सरकार आपके द्वार
+            {language === 'HI' ? 'सेवा आपकी, सरकार आपके द्वार' : 'Seva Aapki, Sarkar Aapke Dwar'}
           </motion.p>
           <motion.p
             className="text-blue-200 text-lg"
@@ -113,7 +113,7 @@ export function RoleSelection({ onNavigate }: RoleSelectionProps) {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
           >
-            Service to You, Government at Your Doorstep
+            {t('home.hero.subtitle')}
           </motion.p>
         </motion.div>
 
@@ -136,18 +136,18 @@ export function RoleSelection({ onNavigate }: RoleSelectionProps) {
                 >
                   <User className="w-10 h-10 text-white" />
                 </motion.div>
-                <CardTitle className="text-3xl mb-3 text-gray-900">Citizen Services</CardTitle>
+                <CardTitle className="text-3xl mb-3 text-gray-900">{t('home.citizen.title')}</CardTitle>
                 <CardDescription className="text-base text-gray-600">
-                  Access government schemes, file complaints, manage documents
+                  {t('home.citizen.desc')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="relative z-10">
                 <div className="space-y-3 mb-6">
                   {[
-                    'Apply for government schemes',
-                    'File and track complaints',
-                    'Manage family documents',
-                    'Pay utility bills online',
+                    t('home.citizen.feature1'),
+                    t('home.citizen.feature2'),
+                    t('home.citizen.feature3'),
+                    t('home.citizen.feature4'),
                   ].map((feature, index) => (
                     <motion.div
                       key={feature}
@@ -165,7 +165,7 @@ export function RoleSelection({ onNavigate }: RoleSelectionProps) {
                   className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-lg py-6 shadow-xl group-hover:shadow-2xl transition-all"
                   onClick={() => onNavigate('login')}
                 >
-                  Enter Portal
+                  {t('home.citizen.enter')}
                 </Button>
               </CardContent>
             </Card>
@@ -188,18 +188,18 @@ export function RoleSelection({ onNavigate }: RoleSelectionProps) {
                 >
                   <Building2 className="w-10 h-10 text-white" />
                 </motion.div>
-                <CardTitle className="text-3xl mb-3 text-gray-900">Government Officials</CardTitle>
+                <CardTitle className="text-3xl mb-3 text-gray-900">{t('home.official.title')}</CardTitle>
                 <CardDescription className="text-base text-gray-600">
-                  Admin dashboard to manage applications and complaints
+                  {t('home.official.desc')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="relative z-10">
                 <div className="space-y-3 mb-6">
                   {[
-                    'Review citizen applications',
-                    'Manage complaints & feedback',
-                    'Verify documents',
-                    'Generate analytics reports',
+                    t('home.official.feature1'),
+                    t('home.official.feature2'),
+                    t('home.official.feature3'),
+                    t('home.official.feature4'),
                   ].map((feature, index) => (
                     <motion.div
                       key={feature}
@@ -217,7 +217,7 @@ export function RoleSelection({ onNavigate }: RoleSelectionProps) {
                   className="w-full bg-gradient-to-r from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-lg py-6 shadow-xl group-hover:shadow-2xl transition-all"
                   onClick={() => onNavigate('official-login')}
                 >
-                  Official Login
+                  {t('home.official.login')}
                 </Button>
               </CardContent>
             </Card>
@@ -235,10 +235,10 @@ export function RoleSelection({ onNavigate }: RoleSelectionProps) {
         <div className="max-w-7xl mx-auto px-6 text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="w-3 h-3 rounded-full bg-green-400 shadow-lg animate-pulse" />
-            <span className="text-white text-sm">Connected</span>
+            <span className="text-white text-sm">{t('common.connected')}</span>
           </div>
           <p className="text-blue-200 text-sm">
-            © 2025 Government of India. All rights reserved.
+            {t('common.copyright')}
           </p>
         </div>
       </motion.footer>

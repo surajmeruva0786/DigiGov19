@@ -74,7 +74,8 @@ export function VoiceControlProvider({ children }: VoiceControlProviderProps) {
     useEffect(() => {
         const savedPreference = localStorage.getItem('voiceControlEnabled');
         if (savedPreference === 'true') {
-            enableVoice();
+            // Auto-start disabled to prevent browser blocking issues
+            // enableVoice(); 
         }
     }, [enableVoice]);
 

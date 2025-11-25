@@ -16,6 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface LoginProps {
   onLogin: () => void;
@@ -28,6 +29,7 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
   const [isAlertOpen, setAlertOpen] = useState(false);
+  const { t } = useLanguage();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,9 +52,9 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
   };
 
   const features = [
-    { text: 'Secure digital identification', delay: 0.6 },
-    { text: '24/7 access to services', delay: 0.7 },
-    { text: 'Fast and easy applications', delay: 0.8 },
+    { text: t('login.feature1'), delay: 0.6 },
+    { text: t('login.feature2'), delay: 0.7 },
+    { text: t('login.feature3'), delay: 0.8 },
   ];
 
   return (
@@ -61,7 +63,7 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 relative">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50" />
         <div className="absolute inset-0 grid-pattern opacity-30" />
-        
+
         <motion.div
           className="max-w-md w-full relative z-10"
           initial={{ opacity: 0, y: 20 }}
@@ -80,7 +82,7 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
               className="hover:bg-white/50"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+              {t('common.back')}
             </Button>
           </motion.div>
 
@@ -103,9 +105,9 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
                 <Sparkles className="w-8 h-8 text-white" />
               </motion.div>
             </div>
-            <h1 className="mb-2 gradient-text">Citizen Login</h1>
+            <h1 className="mb-2 gradient-text">{t('login.title')}</h1>
             <p className="text-gray-600">
-              Access your government services
+              {t('login.subtitle')}
             </p>
           </motion.div>
 
@@ -116,9 +118,9 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
           >
             <Card className="border-0 shadow-2xl bg-white/80 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle>Sign In with Email</CardTitle>
+                <CardTitle>{t('login.signin.title')}</CardTitle>
                 <CardDescription>
-                  Enter your email and password
+                  {t('login.signin.desc')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -129,7 +131,7 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.4 }}
                   >
-                    <Label htmlFor="loginEmail">Email Address</Label>
+                    <Label htmlFor="loginEmail">{t('login.email')}</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
@@ -150,13 +152,13 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.5 }}
                   >
-                    <Label htmlFor="loginPassword">Password</Label>
+                    <Label htmlFor="loginPassword">{t('login.password')}</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
                         id="loginPassword"
                         type={showPassword ? 'text' : 'password'}
-                        placeholder="Enter your password"
+                        placeholder={t('login.password')}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className={`pl-10 pr-10 bg-white/50 border-gray-200/50 focus:bg-white transition-all ${error ? 'border-red-500 focus:border-red-500' : ''}`}
@@ -183,15 +185,15 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
                     <div className="flex items-center space-x-2">
                       <Checkbox id="remember" />
                       <label htmlFor="remember" className="text-sm cursor-pointer">
-                        Remember me
+                        {t('login.remember')}
                       </label>
                     </div>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => onNavigate('forgot-password')}
                       className="text-sm text-blue-600 hover:underline"
                     >
-                      Forgot password?
+                      {t('login.forgot')}
                     </button>
                   </motion.div>
 
@@ -205,7 +207,7 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
                       className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all"
                       size="lg"
                     >
-                      Sign In
+                      {t('login.submit')}
                     </Button>
                   </motion.div>
                 </form>
@@ -221,12 +223,12 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
             transition={{ delay: 0.8 }}
           >
             <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
+              {t('login.noAccount')}{' '}
               <button
                 onClick={() => onNavigate('register')}
                 className="text-blue-600 hover:underline"
               >
-                Register Now
+                {t('login.register')}
               </button>
             </p>
           </motion.div>
@@ -243,9 +245,9 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
                 <Shield className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-sm text-blue-900 mb-1">Secure Access</p>
+                <p className="text-sm text-blue-900 mb-1">{t('login.secure.title')}</p>
                 <p className="text-xs text-blue-800">
-                  Your data is protected with industry-standard encryption.
+                  {t('login.secure.desc')}
                 </p>
               </div>
             </div>
@@ -257,7 +259,7 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
       <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 relative overflow-hidden">
         <AnimatedBackground />
         <FloatingParticles count={40} />
-        
+
         <div className="relative z-10 flex flex-col justify-center px-16 text-white">
           <motion.div
             initial={{ opacity: 0, x: 50 }}
@@ -270,19 +272,19 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
               transition={{ delay: 0.2, duration: 0.6 }}
             >
               <h1 className="text-white mb-4 text-5xl">
-                Digital Government Services
+                {t('login.hero.title')}
               </h1>
             </motion.div>
-            
+
             <motion.p
               className="text-xl text-blue-100 mb-12"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              Access all government services in one secure, convenient platform.
+              {t('login.hero.desc')}
             </motion.p>
-            
+
             <div className="space-y-6">
               {features.map((feature, index) => (
                 <motion.div
@@ -311,17 +313,17 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
         <AlertDialogContent className="max-w-sm rounded-lg shadow-xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-red-600 flex items-center justify-center gap-2">
-              <Lock className="w-5 h-5" /> Login Failed
+              <Lock className="w-5 h-5" /> {t('login.error.title')}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center text-gray-700">
-              Invalid credentials. Please check your email and password and try again.
+              {t('login.error.desc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogAction 
-            onClick={() => setAlertOpen(false)} 
+          <AlertDialogAction
+            onClick={() => setAlertOpen(false)}
             className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
           >
-            Try Again
+            {t('login.error.retry')}
           </AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>
