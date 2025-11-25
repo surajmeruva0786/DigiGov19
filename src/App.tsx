@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Toaster } from './components/ui/sonner';
 import { AnimatePresence } from 'motion/react';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { VoiceControlProvider } from './contexts/VoiceControlContext';
 
 // Import components
 import { RoleSelection } from './components/RoleSelection';
@@ -403,21 +404,23 @@ function App() {
   }
 
   return (
-    <LanguageProvider>
-      <div className="min-h-screen light">
-        <AnimatePresence mode="wait">
-          {renderPage()}
-        </AnimatePresence>
+    <VoiceControlProvider>
+      <LanguageProvider>
+        <div className="min-h-screen light">
+          <AnimatePresence mode="wait">
+            {renderPage()}
+          </AnimatePresence>
 
-        {showVoiceSetup && (
-          <VoiceSetup onEnable={handleVoiceEnable} onSkip={handleVoiceSkip} />
-        )}
-        <Toaster />
-        <ChatbotWidget isOpen={isChatbotOpen} onToggle={toggleChatbot} />
-        <VoiceControlPanel isOpen={isVoiceControlOpen} onClose={() => setIsVoiceControlOpen(false)} />
-        <VoiceControlIndicator />
-      </div>
-    </LanguageProvider>
+          {showVoiceSetup && (
+            <VoiceSetup onEnable={handleVoiceEnable} onSkip={handleVoiceSkip} />
+          )}
+          <Toaster />
+          <ChatbotWidget isOpen={isChatbotOpen} onToggle={toggleChatbot} />
+          <VoiceControlPanel isOpen={isVoiceControlOpen} onClose={() => setIsVoiceControlOpen(false)} />
+          <VoiceControlIndicator />
+        </div>
+      </LanguageProvider>
+    </VoiceControlProvider>
   );
 }
 
