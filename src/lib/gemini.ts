@@ -1,8 +1,13 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const API_KEY = 'AIzaSyDoyIE4Vo70HQjjLRVhwXRXYameGyzH_tQ';
+// Read API key from environment variable
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-const genAI = new GoogleGenerativeAI(API_KEY);
+if (!API_KEY) {
+    console.error('VITE_GEMINI_API_KEY is not set in environment variables');
+}
+
+const genAI = new GoogleGenerativeAI(API_KEY || '');
 
 const SYSTEM_PROMPT = `You are DigiGov Assistant, an AI assistant specialized in helping Indian citizens with government services and schemes. Your role is to provide accurate, helpful information about:
 
