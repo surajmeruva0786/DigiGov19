@@ -34,7 +34,7 @@ import { PageTransition } from './components/PageTransition';
 import { ChatbotWidget } from './components/ChatbotWidget';
 import { VoiceControlIndicator } from './components/VoiceControlIndicator';
 import { VoiceControlPanel } from './components/VoiceControlPanel';
-import { VoiceAssistant } from './components/VoiceAssistant';
+import { VoiceAssistantWidget } from './components/VoiceAssistantWidget';
 
 type Page =
   | 'home'
@@ -422,7 +422,7 @@ function App() {
           <ChatbotWidget isOpen={isChatbotOpen} onToggle={toggleChatbot} />
           <VoiceControlPanel isOpen={isVoiceControlOpen} onClose={() => setIsVoiceControlOpen(false)} />
           <VoiceControlIndicator />
-          {isAuthenticated && <VoiceAssistant onNavigate={handleNavigate} autoEnable={voiceEnabled} />}
+          {isAuthenticated && <VoiceAssistantWidget onNavigate={handleNavigate} autoEnable={voiceEnabled} />}
         </div>
       </LanguageProvider>
     </VoiceControlProvider>
