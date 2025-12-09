@@ -329,11 +329,18 @@ export async function getComplaints(userId) {
     const q = query(
       collection(db, 'complaints'),
       where('userId', '==', safeUid),
-      orderBy('createdAt', 'desc'),
       limit(500)
     );
     const snap = await getDocs(q);
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // Sort in memory by createdAt descending
+    items.sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || 0;
+      const bTime = b.createdAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+
     return buildResponse(true, 'Complaints fetched', items);
   } catch (error) {
     return buildResponse(false, parseFirebaseError(error), null);
@@ -468,11 +475,18 @@ export async function getUserApplications(userId) {
     const q = query(
       collection(db, 'educationApplications'),
       where('userId', '==', safeUid),
-      orderBy('createdAt', 'desc'),
       limit(500)
     );
     const snap = await getDocs(q);
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // Sort in memory by createdAt descending
+    items.sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || 0;
+      const bTime = b.createdAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+
     return buildResponse(true, 'Applications fetched', items);
   } catch (error) {
     return buildResponse(false, parseFirebaseError(error), null);
@@ -501,15 +515,21 @@ export async function bookAppointment(data) {
 export async function getAppointments(userId) {
   try {
     const safeUid = userId || requireAuthUid();
-    // Sorting by a potential 'date' if present, else by createdAt
     const q = query(
       collection(db, 'appointments'),
       where('userId', '==', safeUid),
-      orderBy('createdAt', 'desc'),
       limit(500)
     );
     const snap = await getDocs(q);
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // Sort in memory by createdAt descending
+    items.sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || 0;
+      const bTime = b.createdAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+
     return buildResponse(true, 'Appointments fetched', items);
   } catch (error) {
     return buildResponse(false, parseFirebaseError(error), null);
@@ -558,11 +578,18 @@ export async function getUserDocuments(userId) {
     const q = query(
       collection(db, 'documents'),
       where('userId', '==', safeUid),
-      orderBy('createdAt', 'desc'),
       limit(500)
     );
     const snap = await getDocs(q);
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // Sort in memory by createdAt descending
+    items.sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || 0;
+      const bTime = b.createdAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+
     return buildResponse(true, 'Documents fetched', items);
   } catch (error) {
     return buildResponse(false, parseFirebaseError(error), null);
@@ -634,11 +661,18 @@ export async function getUserFeedback(userId) {
     const q = query(
       collection(db, 'feedback'),
       where('userId', '==', safeUid),
-      orderBy('createdAt', 'desc'),
       limit(500)
     );
     const snap = await getDocs(q);
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // Sort in memory by createdAt descending
+    items.sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || 0;
+      const bTime = b.createdAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+
     return buildResponse(true, 'User feedback fetched', items);
   } catch (error) {
     return buildResponse(false, parseFirebaseError(error), null);
@@ -672,11 +706,18 @@ export async function getUserSchemeApplications(userId) {
     const q = query(
       collection(db, 'schemeApplications'),
       where('userId', '==', safeUid),
-      orderBy('createdAt', 'desc'),
       limit(500)
     );
     const snap = await getDocs(q);
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // Sort in memory by createdAt descending
+    items.sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || 0;
+      const bTime = b.createdAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+
     console.log(`✅ Fetched ${items.length} scheme applications for user ${safeUid}`);
     return buildResponse(true, 'Scheme applications fetched', items);
   } catch (error) {
@@ -762,11 +803,18 @@ export async function getUserChildren(userId) {
     const q = query(
       collection(db, 'children'),
       where('userId', '==', safeUid),
-      orderBy('createdAt', 'desc'),
       limit(500)
     );
     const snap = await getDocs(q);
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // Sort in memory by createdAt descending
+    items.sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || 0;
+      const bTime = b.createdAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+
     return buildResponse(true, 'Children fetched', items);
   } catch (error) {
     return buildResponse(false, parseFirebaseError(error), null);
@@ -879,11 +927,18 @@ export async function getUserPayments(userId) {
     const q = query(
       collection(db, 'payments'),
       where('userId', '==', safeUid),
-      orderBy('createdAt', 'desc'),
       limit(500)
     );
     const snap = await getDocs(q);
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // Sort in memory by createdAt descending
+    items.sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || 0;
+      const bTime = b.createdAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+
     return buildResponse(true, 'Payments fetched', items);
   } catch (error) {
     return buildResponse(false, parseFirebaseError(error), null);
@@ -1056,11 +1111,18 @@ export async function getUserHealthRequests(userId) {
     const q = query(
       collection(db, 'healthRequests'),
       where('userId', '==', safeUid),
-      orderBy('createdAt', 'desc'),
       limit(500)
     );
     const snap = await getDocs(q);
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    // Sort in memory by createdAt descending
+    items.sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || 0;
+      const bTime = b.createdAt?.toMillis?.() || 0;
+      return bTime - aTime;
+    });
+
     console.log(`✅ Fetched ${items.length} health requests for user ${safeUid}`);
     return buildResponse(true, 'Health requests fetched', items);
   } catch (error) {
