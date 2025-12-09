@@ -13,11 +13,12 @@ type VoiceStatus = 'idle' | 'listening-wake' | 'listening-command' | 'processing
 
 interface VoiceAssistantProps {
     onNavigate?: (page: string) => void;
+    autoEnable?: boolean; // Auto-enable voice assistant on mount
 }
 
-export function VoiceAssistant({ onNavigate }: VoiceAssistantProps) {
-    const [isEnabled, setIsEnabled] = useState(false);
-    const [status, setStatus] = useState<VoiceStatus>('idle');
+export function VoiceAssistant({ onNavigate, autoEnable = false }: VoiceAssistantProps) {
+    const [isEnabled, setIsEnabled] = useState(autoEnable);
+    const [status, setStatus] = useState<VoiceStatus>(autoEnable ? 'listening-wake' : 'idle');
     const [currentTranscript, setCurrentTranscript] = useState('');
     const [lastCommand, setLastCommand] = useState('');
     const [showTranscript, setShowTranscript] = useState(false);
@@ -235,6 +236,28 @@ export function VoiceAssistant({ onNavigate }: VoiceAssistantProps) {
             }
         };
     }, [stopWakeListening, stopCommandListening]);
+
+    // Auto-enable voice assistant if autoEnable prop is true
+    useEffect(() => {
+        if (autoEnable && isSupported && !isEnabled) {
+            // Auto-start voice assistant
+            const autoStart = async () => {
+                try {
+                    await navigator.mediaDevices.getUserMedia({ audio: true });
+                    setIsEnabled(true);
+                    setStatus('listening-wake');
+                    startWakeListening();
+                    toast.success('Voice assistant enabled. Say "Hey DigiGov!" to start', {
+                        duration: 5000,
+                    });
+                } catch (error) {
+                    console.error('Auto-enable microphone permission error:', error);
+                    toast.error('Microphone permission denied. Click the microphone button to enable manually.');
+                }
+            };
+            autoStart();
+        }
+    }, [autoEnable, isSupported, isEnabled, startWakeListening]);
 
     // Show help
     const showHelp = () => {

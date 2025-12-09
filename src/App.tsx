@@ -65,6 +65,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isOfficialAuthenticated, setIsOfficialAuthenticated] = useState(false);
   const [showVoiceSetup, setShowVoiceSetup] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const userName = 'John Doe';
   const [officialName, setOfficialName] = useState('');
@@ -136,11 +137,13 @@ function App() {
   };
 
   const handleVoiceEnable = () => {
+    setVoiceEnabled(true);
     setShowVoiceSetup(false);
     setCurrentPage('dashboard');
   };
 
   const handleVoiceSkip = () => {
+    setVoiceEnabled(false);
     setShowVoiceSetup(false);
     setCurrentPage('dashboard');
   };
@@ -419,7 +422,7 @@ function App() {
           <ChatbotWidget isOpen={isChatbotOpen} onToggle={toggleChatbot} />
           <VoiceControlPanel isOpen={isVoiceControlOpen} onClose={() => setIsVoiceControlOpen(false)} />
           <VoiceControlIndicator />
-          {isAuthenticated && <VoiceAssistant onNavigate={handleNavigate} />}
+          {isAuthenticated && <VoiceAssistant onNavigate={handleNavigate} autoEnable={voiceEnabled} />}
         </div>
       </LanguageProvider>
     </VoiceControlProvider>
