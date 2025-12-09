@@ -105,14 +105,18 @@ export function Documents({ onNavigate }: DocumentsProps) {
       const { getUserDocuments } = await import('../firebase');
       const result = await getUserDocuments();
 
+      console.log('getUserDocuments result:', result); // Debug log
+
       if (result.success) {
-        setDocuments(result.data);
+        setDocuments(result.data || []);
+        console.log('Documents loaded:', result.data?.length || 0); // Debug log
       } else {
-        toast.error('Failed to load documents');
+        console.error('Failed to load documents:', result.message); // Debug log
+        toast.error(result.message || 'Failed to load documents');
       }
     } catch (error) {
       console.error('Error fetching documents:', error);
-      toast.error('Error loading documents');
+      toast.error(`Error loading documents: ${error.message || 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }

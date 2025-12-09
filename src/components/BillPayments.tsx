@@ -150,18 +150,21 @@ export function BillPayments({ onNavigate, onToggleChatbot }: BillPaymentsProps)
 
     const transactionId = `TXN${Date.now()}`;
     const upiId = '8688034099@ybl';
-    const payeeName = 'DigiGov';
-    const transactionNote = `${selectedBill.name.replace(' Bill', '')}-${consumerNumber}`;
+    const payeeName = 'MERUVA KODANDA SURAJ';
 
-    // UPI URL parameters
+    // UPI URL parameters based on user's specific format
     const params = new URLSearchParams({
       pa: upiId,                    // Payee address (UPI ID)
       pn: payeeName,                // Payee name
-      am: amount,                   // Amount
-      tn: transactionNote,          // Transaction note
-      tr: transactionId,            // Transaction reference
-      cu: 'INR',                    // Currency
+      mc: '0000',                   // Merchant category code
+      mode: '02',                   // Payment mode
+      purpose: '00',                // Purpose code
     });
+
+    // Add amount if provided (optional in UPI spec)
+    if (amount) {
+      params.set('am', amount);
+    }
 
     // Try PhonePe deep link first, fallback to generic UPI
     const phonepeUrl = `phonepe://pay?${params.toString()}`;
