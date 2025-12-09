@@ -92,6 +92,8 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
 
         console.log('Wake word detected!');
         playBeep();
+
+        // Stop wake word listening first
         stopWakeListening();
 
         setStatus('listening-command');
@@ -102,14 +104,16 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
             speak('Yes?', { rate: 1.2 }).catch(console.error);
         }
 
+        // Wait longer to ensure wake word recognition is fully stopped
         setTimeout(() => {
+            console.log('Starting command listening...');
             startCommandListening();
             commandTimeoutRef.current = setTimeout(() => {
                 if (status === 'listening-command') {
                     handleCommandTimeout();
                 }
             }, 10000);
-        }, 500);
+        }, 1000); // Increased from 500ms to 1000ms
     }
 
     // Handle command result
@@ -170,16 +174,19 @@ export function useVoiceAssistant(options: UseVoiceAssistantOptions = {}) {
 
     // Reset to wake word listening
     function resetToWakeWordListening() {
+        console.log('Resetting to wake word listening...');
         setStatus('listening-wake');
         setCurrentTranscript('');
         setInterimTranscript('');
         resetTranscript();
 
+        // Wait longer to ensure command recognition is fully stopped
         setTimeout(() => {
             if (isEnabled) {
+                console.log('Restarting wake word listening...');
                 startWakeListening();
             }
-        }, 1000);
+        }, 1500); // Increased from 1000ms to 1500ms
     }
 
     // Play beep sound
