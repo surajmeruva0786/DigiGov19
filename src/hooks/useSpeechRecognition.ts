@@ -101,8 +101,9 @@ export function useSpeechRecognition(
 
                 onError?.(event.error);
 
-                // Auto-restart on certain errors if still supposed to be listening
-                if ((event.error === 'no-speech' || event.error === 'audio-capture') && isListeningRef.current) {
+                // Don't auto-restart on no-speech - it causes infinite loops
+                // Only auto-restart on audio-capture errors
+                if (event.error === 'audio-capture' && isListeningRef.current) {
                     setTimeout(() => {
                         if (isListeningRef.current && !isStartingRef.current) {
                             try {

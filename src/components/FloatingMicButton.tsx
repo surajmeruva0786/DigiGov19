@@ -31,17 +31,16 @@ export function FloatingMicButton({ onClick, status, isEnabled }: FloatingMicBut
     return (
         <motion.div
             className="relative"
-            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
         >
             {/* Status Indicator */}
             {isEnabled && (
                 <motion.div
                     className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${status === 'listening-wake' ? 'bg-blue-500' :
-                            status === 'listening-command' ? 'bg-green-500' :
-                                status === 'processing' ? 'bg-yellow-500' :
-                                    status === 'speaking' ? 'bg-purple-500' :
-                                        'bg-gray-400'
+                        status === 'listening-command' ? 'bg-green-500' :
+                            status === 'processing' ? 'bg-yellow-500' :
+                                status === 'speaking' ? 'bg-purple-500' :
+                                    'bg-gray-400'
                         }`}
                     animate={shouldPulse ? {
                         scale: [1, 1.3, 1],
