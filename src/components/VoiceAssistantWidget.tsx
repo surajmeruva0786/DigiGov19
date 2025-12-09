@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FloatingMicButton } from './FloatingMicButton';
 import { VoiceAssistantSidebar } from './VoiceAssistantSidebar';
 import { useVoiceAssistant } from '../hooks/useVoiceAssistant';
@@ -21,15 +21,18 @@ export function VoiceAssistantWidget({ onNavigate, autoEnable = false }: VoiceAs
         setIsSidebarOpen(!isSidebarOpen);
     };
 
+    // Listen for mic button click from navbar
+    useEffect(() => {
+        const handleToggle = () => {
+            handleButtonClick();
+        };
+
+        window.addEventListener('toggleVoiceAssistant', handleToggle);
+        return () => window.removeEventListener('toggleVoiceAssistant', handleToggle);
+    }, [voiceAssistant.isEnabled, isSidebarOpen]);
+
     return (
         <>
-            {/* Floating Mic Button */}
-            <FloatingMicButton
-                onClick={handleButtonClick}
-                status={voiceAssistant.status}
-                isEnabled={voiceAssistant.isEnabled}
-            />
-
             {/* Sidebar Panel */}
             <VoiceAssistantSidebar
                 isOpen={isSidebarOpen}
@@ -53,3 +56,4 @@ export function VoiceAssistantWidget({ onNavigate, autoEnable = false }: VoiceAs
         </>
     );
 }
+
