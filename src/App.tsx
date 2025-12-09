@@ -419,7 +419,7 @@ function App() {
           <ChatbotWidget isOpen={isChatbotOpen} onToggle={toggleChatbot} />
           <VoiceControlPanel isOpen={isVoiceControlOpen} onClose={() => setIsVoiceControlOpen(false)} />
           <VoiceControlIndicator />
-          {isAuthenticated && <VoiceAssistant />}
+          {isAuthenticated && <VoiceAssistant onNavigate={handleNavigate} />}
         </div>
       </LanguageProvider>
     </VoiceControlProvider>

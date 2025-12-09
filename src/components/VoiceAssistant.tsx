@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Mic, MicOff, Volume2, VolumeX, HelpCircle, X } from 'lucide-react';
 import { Button } from './ui/button';
@@ -12,7 +11,11 @@ import { toast } from 'sonner';
 
 type VoiceStatus = 'idle' | 'listening-wake' | 'listening-command' | 'processing' | 'speaking';
 
-export function VoiceAssistant() {
+interface VoiceAssistantProps {
+    onNavigate?: (page: string) => void;
+}
+
+export function VoiceAssistant({ onNavigate }: VoiceAssistantProps) {
     const [isEnabled, setIsEnabled] = useState(false);
     const [status, setStatus] = useState<VoiceStatus>('idle');
     const [currentTranscript, setCurrentTranscript] = useState('');
@@ -20,9 +23,17 @@ export function VoiceAssistant() {
     const [showTranscript, setShowTranscript] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
 
-    const navigate = useNavigate();
-    const location = useLocation();
     const commandTimeoutRef = useRef<NodeJS.Timeout>();
+
+    // Navigation function that uses the prop or falls back to window.location
+    const navigate = useCallback((path: string) => {
+        if (onNavigate) {
+            onNavigate(path);
+        } else {
+            // Fallback: just log if no navigation function provided
+            console.warn('Navigation requested but no onNavigate prop provided:', path);
+        }
+    }, [onNavigate]);
 
     // Speech recognition for wake word detection
     const {
@@ -118,7 +129,7 @@ export function VoiceAssistant() {
         try {
             const result = await executeCommand(transcript, {
                 navigate,
-                currentPath: location.pathname,
+                currentPath: window.location.pathname,
             });
 
             if (result.shouldSpeak && !isMuted) {
@@ -268,10 +279,10 @@ Say "Hey DigiGov!" to activate the assistant.`;
                     {isEnabled && (
                         <motion.div
                             className={`absolute -top-1 -right-1 w-4 h-4 rounded-full ${status === 'listening-wake' ? 'bg-blue-500' :
-                                    status === 'listening-command' ? 'bg-green-500' :
-                                        status === 'processing' ? 'bg-yellow-500' :
-                                            status === 'speaking' ? 'bg-purple-500' :
-                                                'bg-gray-400'
+                                status === 'listening-command' ? 'bg-green-500' :
+                                    status === 'processing' ? 'bg-yellow-500' :
+                                        status === 'speaking' ? 'bg-purple-500' :
+                                            'bg-gray-400'
                                 }`}
                             animate={{
                                 scale: status === 'listening-wake' || status === 'listening-command' ? [1, 1.2, 1] : 1,
@@ -289,8 +300,8 @@ Say "Hey DigiGov!" to activate the assistant.`;
                         size="icon"
                         onClick={toggleVoiceAssistant}
                         className={`w-16 h-16 rounded-full shadow-lg transition-all ${isEnabled
-                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
-                                : 'bg-gray-600 hover:bg-gray-700'
+                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
+                            : 'bg-gray-600 hover:bg-gray-700'
                             }`}
                     >
                         {isEnabled ? (
