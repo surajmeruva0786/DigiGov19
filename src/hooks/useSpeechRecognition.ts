@@ -171,7 +171,8 @@ export function useSpeechRecognition(
             isStartingRef.current = false;
 
             // If already started, just update state
-            if (error.message && error.message.includes('already started')) {
+            if (error.message && (error.message.includes('already started') || error.name === 'InvalidStateError')) {
+                console.log('Recognition already running, syncing state');
                 isListeningRef.current = true;
                 setIsListening(true);
             } else {
