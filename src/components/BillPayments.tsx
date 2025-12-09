@@ -84,6 +84,8 @@ export function BillPayments({ onNavigate, onToggleChatbot }: BillPaymentsProps)
   const [showPinModal, setShowPinModal] = useState(false);
   const [showUpiModal, setShowUpiModal] = useState(false);
   const [pin, setPin] = useState('');
+  const [showPaymentConfirmation, setShowPaymentConfirmation] = useState(false);
+  const [pendingPaymentData, setPendingPaymentData] = useState<any>(null);
   const [historyFilter, setHistoryFilter] = useState('30days');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
@@ -140,9 +142,64 @@ export function BillPayments({ onNavigate, onToggleChatbot }: BillPaymentsProps)
     fetchPayments();
   }, []);
 
+  // Generate UPI payment URL for PhonePe
+  const generateUpiPaymentUrl = () => {
+    if (!selectedBill || !amount || !consumerNumber) {
+      return { phonepeUrl: '', genericUpiUrl: '', transactionId: '' };
+    }
+
+    const transactionId = `TXN${Date.now()}`;
+    const upiId = '8688034099@ybl';
+    const payeeName = 'DigiGov';
+    const transactionNote = `${selectedBill.name.replace(' Bill', '')}-${consumerNumber}`;
+
+    // UPI URL parameters
+    const params = new URLSearchParams({
+      pa: upiId,                    // Payee address (UPI ID)
+      pn: payeeName,                // Payee name
+      am: amount,                   // Amount
+      tn: transactionNote,          // Transaction note
+      tr: transactionId,            // Transaction reference
+      cu: 'INR',                    // Currency
+    });
+
+    // Try PhonePe deep link first, fallback to generic UPI
+    const phonepeUrl = `phonepe://pay?${params.toString()}`;
+    const genericUpiUrl = `upi://pay?${params.toString()}`;
+
+    return { phonepeUrl, genericUpiUrl, transactionId };
+  };
+
   const handleProceedToPayment = () => {
-    if (consumerNumber && amount) {
-      setShowPinModal(true);
+    if (consumerNumber && amount && selectedBill) {
+      const { phonepeUrl, genericUpiUrl, transactionId } = generateUpiPaymentUrl();
+
+      // Store pending payment data
+      const paymentData = {
+        billType: selectedBill.name.replace(' Bill', ''),
+        consumerNumber,
+        amount: parseFloat(amount),
+        paymentMethod: 'UPI',
+        upiApp: 'PhonePe',
+        status: 'Success' as const,
+        transactionId,
+      };
+      setPendingPaymentData(paymentData);
+
+      // Try to open PhonePe app first
+      const paymentWindow = window.open(phonepeUrl, '_blank');
+
+      // Fallback to generic UPI if PhonePe doesn't open
+      setTimeout(() => {
+        if (!paymentWindow || paymentWindow.closed) {
+          window.open(genericUpiUrl, '_blank');
+        }
+      }, 1000);
+
+      // Show confirmation dialog
+      setTimeout(() => {
+        setShowPaymentConfirmation(true);
+      }, 2000);
     }
   };
 
@@ -193,6 +250,37 @@ export function BillPayments({ onNavigate, onToggleChatbot }: BillPaymentsProps)
     setSelectedBill(null);
     setConsumerNumber('');
     setAmount('');
+  };
+
+  const handlePaymentConfirmation = async (success: boolean) => {
+    setShowPaymentConfirmation(false);
+
+    if (success && pendingPaymentData) {
+      try {
+        const result = await recordPayment(pendingPaymentData);
+        if (result.success) {
+          toast.success('Payment recorded successfully!');
+          // Refresh payment history
+          const updatedPayments = await getUserPayments();
+          if (updatedPayments.success) {
+            setTransactions(updatedPayments.data || []);
+          }
+        } else {
+          toast.error(result.message || 'Payment recording failed');
+        }
+      } catch (error) {
+        toast.error('An error occurred while recording payment');
+        console.error('Error recording payment:', error);
+      }
+    } else {
+      toast.info('Payment cancelled');
+    }
+
+    // Reset form
+    setSelectedBill(null);
+    setConsumerNumber('');
+    setAmount('');
+    setPendingPaymentData(null);
   };
 
   const handleCancel = () => {
@@ -552,6 +640,58 @@ export function BillPayments({ onNavigate, onToggleChatbot }: BillPaymentsProps)
                 </Card>
               </motion.div>
             ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Confirmation Dialog */}
+      <Dialog open={showPaymentConfirmation} onOpenChange={setShowPaymentConfirmation}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Confirm Payment</DialogTitle>
+            <DialogDescription>
+              Have you completed the payment in PhonePe?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Bill Type:</span>
+                <span className="text-sm font-medium">{selectedBill?.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Consumer Number:</span>
+                <span className="text-sm font-medium font-mono">{consumerNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Amount:</span>
+                <span className="text-sm font-medium flex items-center">
+                  <IndianRupee className="w-4 h-4" />
+                  {amount}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">UPI ID:</span>
+                <span className="text-sm font-medium font-mono">8688034099@ybl</span>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => handlePaymentConfirmation(true)}
+                className="flex-1 bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Payment Completed
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handlePaymentConfirmation(false)}
+                className="flex-1 hover:bg-red-50 hover:text-red-600"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Cancel
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
