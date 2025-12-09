@@ -186,20 +186,33 @@ export function BillPayments({ onNavigate, onToggleChatbot }: BillPaymentsProps)
       };
       setPendingPaymentData(paymentData);
 
-      // Try to open PhonePe app first
-      const paymentWindow = window.open(phonepeUrl, '_blank');
+      // Create a temporary anchor element to trigger the deep link
+      // This approach works better than window.open which browsers block for deep links
+      const link = document.createElement('a');
+      link.href = phonepeUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+
+      // Append to body, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
       // Fallback to generic UPI if PhonePe doesn't open
       setTimeout(() => {
-        if (!paymentWindow || paymentWindow.closed) {
-          window.open(genericUpiUrl, '_blank');
-        }
+        const fallbackLink = document.createElement('a');
+        fallbackLink.href = genericUpiUrl;
+        fallbackLink.target = '_blank';
+        fallbackLink.rel = 'noopener noreferrer';
+        document.body.appendChild(fallbackLink);
+        fallbackLink.click();
+        document.body.removeChild(fallbackLink);
       }, 1000);
 
-      // Show confirmation dialog
+      // Show confirmation dialog after a short delay
       setTimeout(() => {
         setShowPaymentConfirmation(true);
-      }, 2000);
+      }, 1500);
     }
   };
 
