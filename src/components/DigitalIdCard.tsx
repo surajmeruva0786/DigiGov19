@@ -29,7 +29,7 @@ export function DigitalIdCard({ userName = 'Rajesh Kumar', onNavigate, onToggleC
   const citizenData = {
     fullName: userName,
     aadhaar: '1234 5678 9012',
-    address: '123 MG Road, Sector 21',
+    address: '123, Rajpath Road, Sector 21',
     addressLine2: 'New Delhi - 110001',
     phone: '+91 98765 43210',
   };
@@ -73,9 +73,9 @@ export function DigitalIdCard({ userName = 'Rajesh Kumar', onNavigate, onToggleC
             </div>
             {onToggleChatbot && (
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="relative hover:bg-white/50"
                   onClick={onToggleChatbot}
                 >
@@ -209,7 +209,7 @@ export function DigitalIdCard({ userName = 'Rajesh Kumar', onNavigate, onToggleC
                           <p className="text-sm text-gray-600 mb-1">Full Name</p>
                           <h3 className="text-gray-900">{citizenData.fullName}</h3>
                         </div>
-                        
+
                         <div>
                           <p className="text-sm text-gray-600 mb-1">Aadhaar Number</p>
                           <p className="text-gray-900 tracking-wider">
@@ -237,9 +237,8 @@ export function DigitalIdCard({ userName = 'Rajesh Kumar', onNavigate, onToggleC
                             {Array.from({ length: 16 }).map((_, i) => (
                               <div
                                 key={i}
-                                className={`${
-                                  Math.random() > 0.5 ? 'bg-gray-900' : 'bg-white'
-                                } rounded-sm`}
+                                className={`${Math.random() > 0.5 ? 'bg-gray-900' : 'bg-white'
+                                  } rounded-sm`}
                               />
                             ))}
                           </div>

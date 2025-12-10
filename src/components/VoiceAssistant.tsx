@@ -270,7 +270,7 @@ Navigation:
 - "Pay my bills"
 
 Form Filling:
-- "Fill my name as John Doe"
+- "Fill my name as Rajesh Kumar"
 - "Enter phone number 1234567890"
 - "Set amount to 500"
 

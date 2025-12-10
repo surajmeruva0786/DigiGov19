@@ -32,7 +32,7 @@ export function AdminFeedbackDashboard({ onNavigate }: AdminFeedbackDashboardPro
   const feedbackItems = [
     {
       id: 'FB-2025-089',
-      citizen: 'John Doe',
+      citizen: 'Rajesh Kumar',
       category: 'Health Services',
       subject: 'Long wait times at Central Medical Center',
       priority: 'High',

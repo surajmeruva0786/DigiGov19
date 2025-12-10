@@ -30,7 +30,7 @@ export function VoiceAssistantSidebar({ isOpen, onClose, state, actions }: Voice
         {
             category: 'Form Filling',
             commands: [
-                { text: 'Fill my name as John Doe', description: 'Fill name field' },
+                { text: 'Fill my name as Rajesh Kumar', description: 'Fill name field' },
                 { text: 'Enter phone number 1234567890', description: 'Fill phone field' },
                 { text: 'Set amount to 500', description: 'Fill amount field' },
             ],
@@ -111,8 +111,8 @@ export function VoiceAssistantSidebar({ isOpen, onClose, state, actions }: Voice
                                 <Button
                                     onClick={toggleEnabled}
                                     className={`flex-1 ${isEnabled
-                                            ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
-                                            : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800'
+                                        ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
+                                        : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800'
                                         }`}
                                 >
                                     {isEnabled ? (

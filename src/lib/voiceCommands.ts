@@ -155,7 +155,7 @@ export const formCommands: VoiceCommand[] = [
             return { success: false, message: 'Name field not found on this page', shouldSpeak: true };
         },
         description: 'Fill name in form',
-        examples: ['Fill my name as John Doe', 'Enter name John'],
+        examples: ['Fill my name as Rajesh Kumar', 'Enter name Rajesh'],
     },
     {
         intent: 'FILL_PHONE',

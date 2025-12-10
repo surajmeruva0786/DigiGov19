@@ -67,7 +67,7 @@ function App() {
   const [showVoiceSetup, setShowVoiceSetup] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
-  const userName = 'John Doe';
+  const userName = 'Rajesh Kumar';
   const [officialName, setOfficialName] = useState('');
   const [officialDepartment, setOfficialDepartment] = useState('');
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
