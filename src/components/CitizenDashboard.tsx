@@ -245,23 +245,23 @@ export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatb
   const unreadCount = notifications.filter(n => !n.read).length;
   const quickStats = [
     {
-      label: 'Documents',
+      label: t('dashboard.documents'),
       count: userStats.documentsCount,
       icon: FileText,
       color: 'from-blue-500 to-cyan-500',
       page: 'documents'
     },
     {
-      label: 'Complaints',
+      label: t('dashboard.complaints'),
       count: userStats.pendingComplaintsCount > 0
-        ? `${userStats.pendingComplaintsCount} Pending`
+        ? `${userStats.pendingComplaintsCount} ${t('complaints.status.pending')}`
         : userStats.complaintsCount,
       icon: MessageSquare,
       color: 'from-pink-500 to-red-500',
       page: 'complaints'
     },
     {
-      label: 'Applications',
+      label: t('dashboard.applications'),
       count: userStats.applicationsCount,
       icon: FileText,
       color: 'from-purple-500 to-indigo-500',
@@ -270,22 +270,22 @@ export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatb
   ];
   const serviceModules = [
     {
-      title: 'Government Schemes',
-      description: 'Browse and apply for schemes',
+      title: t('dashboard.module.schemes'),
+      description: t('dashboard.module.schemesDesc'),
       icon: FileText,
       gradient: 'from-purple-500 to-purple-700',
       page: 'schemes',
     },
     {
-      title: 'Complaints',
-      description: 'File complaints and track status',
+      title: t('dashboard.module.complaints'),
+      description: t('dashboard.module.complaintsDesc'),
       icon: MessageSquare,
       gradient: 'from-pink-500 to-red-500',
       page: 'complaints',
     },
     {
-      title: 'Children',
-      description: 'Manage child records & education',
+      title: t('dashboard.module.children'),
+      description: t('dashboard.module.childrenDesc'),
       icon: Baby,
       gradient: 'from-blue-500 to-cyan-500',
       page: 'children',
@@ -489,17 +489,17 @@ export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatb
             <CardHeader>
               <div className="flex items-center gap-3">
                 <Search className="w-6 h-6 text-blue-600" />
-                <CardTitle>Search Across All Services</CardTitle>
+                <CardTitle>{t('dashboard.searchTitle')}</CardTitle>
               </div>
               <CardDescription>
-                Search schemes, complaints, documents, and more
+                {t('dashboard.searchDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <Input
-                  placeholder="Search schemes, complaints, documents..."
+                  placeholder={t('dashboard.searchPlaceholder')}
                   className="pl-12 pr-12 h-14 text-lg bg-white/50 border-gray-200/50 focus:bg-white"
                   value={searchQuery}
                   onChange={handleSearchChange}
@@ -529,7 +529,7 @@ export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatb
                   onClick={() => onNavigate('analytics')}
                 >
                   <BarChart3 className="w-4 h-4 mr-2" />
-                  View My Analytics
+                  {t('dashboard.viewAnalytics')}
                 </Button>
               </div>
             </CardContent>
@@ -542,7 +542,7 @@ export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatb
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <h2 className="mb-6">Service Modules</h2>
+          <h2 className="mb-6">{t('dashboard.serviceModules')}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {serviceModules.map((module, index) => (
               <motion.div
