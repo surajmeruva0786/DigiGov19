@@ -1273,3 +1273,88 @@ export async function updateScholarshipStatus(id, status, remarks = '') {
     return buildResponse(false, parseFirebaseError(error), null);
   }
 }
+
+// --------------------------------------------------------------------------------
+// Firestore: notifications
+// --------------------------------------------------------------------------------
+export async function getUserNotifications(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+    const q = query(
+      collection(db, 'notifications'),
+      where('userId', '==', safeUid),
+      orderBy('createdAt', 'desc'),
+      limit(50)
+    );
+    const snap = await getDocs(q);
+    const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return buildResponse(true, 'Notifications fetched', items);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function createNotification(userId, notificationData) {
+  try {
+    const payload = {
+      ...notificationData,
+      userId,
+      read: false,
+      createdAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'notifications'), payload);
+    return buildResponse(true, 'Notification created', { id: ref.id });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function markNotificationAsRead(notificationId) {
+  try {
+    await updateDoc(doc(db, 'notifications', notificationId), {
+      read: true,
+      updatedAt: serverTimestamp(),
+    });
+    return buildResponse(true, 'Notification marked as read', { id: notificationId });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+export async function deleteNotification(notificationId) {
+  try {
+    await deleteDoc(doc(db, 'notifications', notificationId));
+    return buildResponse(true, 'Notification deleted', { id: notificationId });
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}
+
+// --------------------------------------------------------------------------------
+// User Statistics
+// --------------------------------------------------------------------------------
+export async function getUserStats(userId) {
+  try {
+    const safeUid = userId || requireAuthUid();
+
+    // Fetch counts for various collections
+    const [documentsResult, complaintsResult, applicationsResult] = await Promise.all([
+      getUserDocuments(safeUid),
+      getComplaints(safeUid),
+      getUserSchemeApplications(safeUid),
+    ]);
+
+    const stats = {
+      documentsCount: documentsResult.success ? documentsResult.data.length : 0,
+      complaintsCount: complaintsResult.success ? complaintsResult.data.length : 0,
+      pendingComplaintsCount: complaintsResult.success
+        ? complaintsResult.data.filter(c => c.status === 'Pending').length
+        : 0,
+      applicationsCount: applicationsResult.success ? applicationsResult.data.length : 0,
+    };
+
+    return buildResponse(true, 'User stats fetched', stats);
+  } catch (error) {
+    return buildResponse(false, parseFirebaseError(error), null);
+  }
+}

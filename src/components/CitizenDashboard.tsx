@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
   FileText,
@@ -44,60 +44,156 @@ export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatb
     {
       id: '1',
       type: 'scheme' as const,
-      title: 'New Scholarship Available',
-      message: 'PM Scholarship Scheme 2025 applications are now open. Apply before the deadline!',
-      time: '2 hours ago',
+      title: 'नई छात्रवृत्ति उपलब्ध',
+      message: 'प्रधानमंत्री छात्रवृत्ति योजना 2025 के लिए आवेदन खुले हैं। समय सीमा से पहले आवेदन करें!',
+      time: '2 घंटे पहले',
       read: false,
     },
     {
       id: '2',
       type: 'success' as const,
-      title: 'Application Approved',
-      message: 'Your education assistance application has been approved. Funds will be disbursed shortly.',
-      time: '5 hours ago',
+      title: 'आवेदन स्वीकृत',
+      message: 'आपका शिक्षा सहायता आवेदन स्वीकृत हो गया है। राशि शीघ्र ही वितरित की जाएगी।',
+      time: '5 घंटे पहले',
       read: false,
     },
     {
       id: '3',
       type: 'info' as const,
-      title: 'Document Verification Pending',
-      message: 'Please upload the required documents for your health services application.',
-      time: '1 day ago',
+      title: 'दस्तावेज़ सत्यापन लंबित',
+      message: 'कृपया अपने स्वास्थ्य सेवा आवेदन के लिए आवश्यक दस्तावेज़ अपलोड करें।',
+      time: '1 दिन पहले',
       read: false,
     },
     {
       id: '4',
       type: 'warning' as const,
-      title: 'Complaint Status Update',
-      message: 'Your complaint #12345 has been reviewed and is now in progress.',
-      time: '2 days ago',
+      title: 'शिकायत स्थिति अपडेट',
+      message: 'आपकी शिकायत की समीक्षा की गई है और अब प्रगति में है।',
+      time: '2 दिन पहले',
       read: true,
     },
     {
       id: '5',
       type: 'info' as const,
-      title: 'System Maintenance',
-      message: 'Scheduled maintenance on Nov 15, 2025 from 2:00 AM to 4:00 AM.',
-      time: '3 days ago',
+      title: 'आयुष्मान भारत योजना',
+      message: 'आयुष्मान भारत के तहत नए लाभार्थियों का पंजीकरण शुरू। अभी आवेदन करें!',
+      time: '3 दिन पहले',
       read: true,
     },
   ]);
+  const [userStats, setUserStats] = useState({
+    documentsCount: 0,
+    complaintsCount: 0,
+    pendingComplaintsCount: 0,
+    applicationsCount: 0,
+  });
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n => (n.id === id ? { ...n, read: true } : n))
-    );
+  // Fetch notifications and stats from Firestore
+  useEffect(() => {
+    fetchNotifications();
+    fetchUserStats();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const { getUserNotifications } = await import('../firebase');
+      const result = await getUserNotifications();
+
+      if (result.success && result.data.length > 0) {
+        const transformedNotifications = result.data.map((notif: any) => ({
+          id: notif.id,
+          type: notif.type || 'info',
+          title: notif.title,
+          message: notif.message,
+          time: notif.createdAt?.toDate?.()?.toLocaleDateString('hi-IN', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          }) || 'हाल ही में',
+          read: notif.read || false,
+        }));
+        setNotifications(transformedNotifications);
+      }
+      // If no notifications, keep the Indian-themed fallback notifications
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      // Keep fallback notifications on error
+    }
   };
 
-  const handleMarkAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const fetchUserStats = async () => {
+    try {
+      const { getUserStats } = await import('../firebase');
+      const result = await getUserStats();
+
+      if (result.success) {
+        setUserStats(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+    }
   };
 
-  const handleDeleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      const { markNotificationAsRead } = await import('../firebase');
+      await markNotificationAsRead(id);
+      setNotifications(prev =>
+        prev.map(n => (n.id === id ? { ...n, read: true } : n))
+      );
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      const { markNotificationAsRead } = await import('../firebase');
+      const unreadNotifications = notifications.filter(n => !n.read);
+      await Promise.all(unreadNotifications.map(n => markNotificationAsRead(n.id)));
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
+  };
+
+  const handleDeleteNotification = async (id: string) => {
+    try {
+      const { deleteNotification } = await import('../firebase');
+      await deleteNotification(id);
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
+  const quickStats = [
+    {
+      label: 'Documents',
+      count: userStats.documentsCount,
+      icon: FileText,
+      color: 'from-blue-500 to-cyan-500',
+      page: 'documents'
+    },
+    {
+      label: 'Complaints',
+      count: userStats.pendingComplaintsCount > 0
+        ? `${userStats.pendingComplaintsCount} Pending`
+        : userStats.complaintsCount,
+      icon: MessageSquare,
+      color: 'from-pink-500 to-red-500',
+      page: 'complaints'
+    },
+    {
+      label: 'Applications',
+      count: userStats.applicationsCount,
+      icon: FileText,
+      color: 'from-purple-500 to-indigo-500',
+      page: 'applications'
+    },
+  ];
   const serviceModules = [
     {
       title: 'Government Schemes',
@@ -162,12 +258,6 @@ export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatb
       gradient: 'from-indigo-600 to-purple-700',
       page: 'education',
     },
-  ];
-
-  const quickStats = [
-    { label: 'Documents', count: 12, icon: FileText, color: 'from-blue-500 to-cyan-500', page: 'documents' },
-    { label: 'Complaints', count: '3 Pending', icon: MessageSquare, color: 'from-pink-500 to-red-500', page: 'complaints' },
-    { label: 'Applications', count: 5, icon: FileText, color: 'from-purple-500 to-indigo-500', page: 'applications' },
   ];
 
   return (
@@ -403,17 +493,18 @@ export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatb
             ))}
           </div>
         </motion.div>
-      </div>
+      </div >
 
       {/* Notifications Panel */}
-      <NotificationsPanel
+      < NotificationsPanel
         isOpen={notificationsOpen}
-        onClose={() => setNotificationsOpen(false)}
+        onClose={() => setNotificationsOpen(false)
+        }
         notifications={notifications}
         onMarkAsRead={handleMarkAsRead}
         onMarkAllAsRead={handleMarkAllAsRead}
         onDelete={handleDeleteNotification}
       />
-    </div>
+    </div >
   );
 }

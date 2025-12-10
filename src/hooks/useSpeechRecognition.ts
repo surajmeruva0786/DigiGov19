@@ -59,6 +59,7 @@ export function useSpeechRecognition(
             recognition.lang = lang;
 
             recognition.onstart = () => {
+                console.log('Speech recognition started');
                 isStartingRef.current = false;
                 isListeningRef.current = true;
                 setIsListening(true);

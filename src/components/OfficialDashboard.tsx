@@ -464,72 +464,8 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
     }
   };
 
-  // Sample expanded data matching citizen forms
-  const userSignups = [
-    {
-      id: 'USR-001',
-      name: 'Rajesh Kumar',
-      aadhaar: 'XXXX-XXXX-5678',
-      fullAadhaar: '1234-5678-9012',
-      phone: '+91 98765 43210',
-      email: 'rajesh@email.com',
-      dob: '15-Jan-1985',
-      gender: 'Male',
-      address: '123, Green Park',
-      city: 'New Delhi',
-      state: 'Delhi',
-      pincode: '110016',
-      fullAddress: '123, Green Park, New Delhi, Delhi - 110016',
-      aadhaarPhotoLink: 'https://drive.google.com/file/d/sample1',
-      registeredDate: 'Nov 4, 2025',
-      services: ['Digital ID', 'Bill Payment', 'Complaints'],
-      documents: 5,
-      verificationStatus: 'Verified'
-    },
-    {
-      id: 'USR-002',
-      name: 'Priya Sharma',
-      aadhaar: 'XXXX-XXXX-9012',
-      fullAadhaar: '5678-9012-3456',
-      phone: '+91 98765 43211',
-      email: 'priya@email.com',
-      dob: '22-Mar-1990',
-      gender: 'Female',
-      address: '456, Lajpat Nagar',
-      city: 'New Delhi',
-      state: 'Delhi',
-      pincode: '110024',
-      fullAddress: '456, Lajpat Nagar, New Delhi, Delhi - 110024',
-      aadhaarPhotoLink: 'https://drive.google.com/file/d/sample2',
-      registeredDate: 'Nov 3, 2025',
-      services: ['Education', 'Health Services'],
-      documents: 4,
-      verificationStatus: 'Pending'
-    },
-    {
-      id: 'USR-003',
-      name: 'Amit Patel',
-      aadhaar: 'XXXX-XXXX-3456',
-      fullAadhaar: '9012-3456-7890',
-      phone: '+91 98765 43212',
-      email: 'amit@email.com',
-      dob: '10-Jul-1988',
-      gender: 'Male',
-      address: '789, Karol Bagh',
-      city: 'New Delhi',
-      state: 'Delhi',
-      pincode: '110005',
-      fullAddress: '789, Karol Bagh, New Delhi, Delhi - 110005',
-      aadhaarPhotoLink: 'https://drive.google.com/file/d/sample3',
-      registeredDate: 'Nov 3, 2025',
-      services: ['Government Schemes', 'Documents'],
-      documents: 6,
-      verificationStatus: 'Verified'
-    },
-  ];
-
-  // Mock data removed - using state variables initialized above
-
+  // All data is fetched from Firestore and stored in state variables
+  // No hardcoded fallback data needed - empty states show "No data" messages
 
   const schemeApplications = [
     {
@@ -744,6 +680,8 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
 
   // Mock documents removed - using state variable initialized above
 
+
+  // Removed hardcoded billPayments array - using paymentsData state from Firestore
 
   const billPayments = [
     {
@@ -1283,7 +1221,7 @@ export function OfficialDashboard({ officialName, department, onLogout, onShowAn
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {(userSignupsData.length > 0 ? userSignupsData : userSignups).map((user) => (
+                        {userSignupsData.map((user) => (
                           <TableRow
                             key={user.id}
                             className="cursor-pointer hover:bg-blue-50 transition-colors"
