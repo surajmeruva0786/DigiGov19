@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner@2.0.3';
 import { motion } from 'motion/react';
+import { SuggestionList } from './ui/SuggestionChip';
+import { getFeedbackSubjectSuggestions, getFeedbackDescriptionSuggestions } from '../lib/geminiSuggestions';
 
 interface CitizenFeedbackProps {
   onNavigate: (page: string) => void;
@@ -30,6 +32,12 @@ export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedback
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [attachments, setAttachments] = useState('');
+
+  // Suggestion states
+  const [subjectSuggestions, setSubjectSuggestions] = useState<string[]>([]);
+  const [descriptionSuggestions, setDescriptionSuggestions] = useState<string[]>([]);
+  const [isLoadingSubjectSuggestions, setIsLoadingSubjectSuggestions] = useState(false);
+  const [isLoadingDescriptionSuggestions, setIsLoadingDescriptionSuggestions] = useState(false);
 
   // Fetch feedback on component mount
   useEffect(() => {
@@ -115,6 +123,66 @@ export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedback
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Fetch subject suggestions when category or type changes
+  useEffect(() => {
+    if (category && feedbackType) {
+      fetchSubjectSuggestions();
+    } else {
+      setSubjectSuggestions([]);
+      setDescriptionSuggestions([]);
+    }
+  }, [category, feedbackType]);
+
+  // Fetch description suggestions when subject changes
+  useEffect(() => {
+    if (category && feedbackType && subject.length > 5) {
+      fetchDescriptionSuggestions();
+    } else {
+      setDescriptionSuggestions([]);
+    }
+  }, [subject, category, feedbackType]);
+
+  const fetchSubjectSuggestions = async () => {
+    if (!category || !feedbackType) return;
+
+    setIsLoadingSubjectSuggestions(true);
+    try {
+      const suggestions = await getFeedbackSubjectSuggestions(category, feedbackType, subject);
+      setSubjectSuggestions(suggestions);
+    } catch (error) {
+      console.error('Error fetching subject suggestions:', error);
+    } finally {
+      setIsLoadingSubjectSuggestions(false);
+    }
+  };
+
+  const fetchDescriptionSuggestions = async () => {
+    if (!category || !feedbackType || !subject) return;
+
+    setIsLoadingDescriptionSuggestions(true);
+    try {
+      const suggestions = await getFeedbackDescriptionSuggestions(
+        category,
+        feedbackType,
+        subject,
+        description
+      );
+      setDescriptionSuggestions(suggestions);
+    } catch (error) {
+      console.error('Error fetching description suggestions:', error);
+    } finally {
+      setIsLoadingDescriptionSuggestions(false);
+    }
+  };
+
+  const handleSubjectSuggestionClick = (suggestion: string) => {
+    setSubject(suggestion);
+  };
+
+  const handleDescriptionSuggestionClick = (suggestion: string) => {
+    setDescription(suggestion);
   };
 
   return (
@@ -216,6 +284,15 @@ export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedback
                     onChange={(e) => setSubject(e.target.value)}
                     required
                   />
+                  {/* AI Suggestions for Subject */}
+                  {category && feedbackType && (
+                    <SuggestionList
+                      suggestions={subjectSuggestions}
+                      onSelect={handleSubjectSuggestionClick}
+                      isLoading={isLoadingSubjectSuggestions}
+                      title="AI Suggestions"
+                    />
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -229,6 +306,15 @@ export function CitizenFeedback({ onNavigate, onToggleChatbot }: CitizenFeedback
                     onChange={(e) => setDescription(e.target.value)}
                     required
                   ></textarea>
+                  {/* AI Suggestions for Description */}
+                  {category && feedbackType && subject.length > 5 && (
+                    <SuggestionList
+                      suggestions={descriptionSuggestions}
+                      onSelect={handleDescriptionSuggestionClick}
+                      isLoading={isLoadingDescriptionSuggestions}
+                      title="AI Suggestions"
+                    />
+                  )}
                 </div>
 
                 <div className="space-y-2">

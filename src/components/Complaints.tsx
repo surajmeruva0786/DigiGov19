@@ -35,6 +35,8 @@ import { Textarea } from './ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { Separator } from './ui/separator';
 import { toast } from 'sonner@2.0.3';
+import { SuggestionList } from './ui/SuggestionChip';
+import { getComplaintSubjectSuggestions, getComplaintDescriptionSuggestions } from '../lib/geminiSuggestions';
 
 interface ComplaintsProps {
   onNavigate: (page: string) => void;
@@ -75,6 +77,12 @@ export function Complaints({ onNavigate, onToggleChatbot }: ComplaintsProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Suggestion states
+  const [subjectSuggestions, setSubjectSuggestions] = useState<string[]>([]);
+  const [descriptionSuggestions, setDescriptionSuggestions] = useState<string[]>([]);
+  const [isLoadingSubjectSuggestions, setIsLoadingSubjectSuggestions] = useState(false);
+  const [isLoadingDescriptionSuggestions, setIsLoadingDescriptionSuggestions] = useState(false);
+
   const departments: Department[] = [
     { id: 'revenue', name: 'Revenue', icon: Building2, color: 'from-blue-500 to-blue-600' },
     { id: 'health', name: 'Health', icon: Heart, color: 'from-red-500 to-pink-600' },
@@ -91,6 +99,25 @@ export function Complaints({ onNavigate, onToggleChatbot }: ComplaintsProps) {
   useEffect(() => {
     fetchComplaints();
   }, []);
+
+  // Fetch subject suggestions when department changes
+  useEffect(() => {
+    if (selectedDepartment) {
+      fetchSubjectSuggestions();
+    } else {
+      setSubjectSuggestions([]);
+      setDescriptionSuggestions([]);
+    }
+  }, [selectedDepartment]);
+
+  // Fetch description suggestions when subject changes
+  useEffect(() => {
+    if (selectedDepartment && subject.length > 5) {
+      fetchDescriptionSuggestions();
+    } else {
+      setDescriptionSuggestions([]);
+    }
+  }, [subject, selectedDepartment]);
 
   const fetchComplaints = async () => {
     setIsLoading(true);
@@ -190,6 +217,48 @@ export function Complaints({ onNavigate, onToggleChatbot }: ComplaintsProps) {
     setSubject('');
     setDescription('');
     setDocumentLinks('');
+    setSubjectSuggestions([]);
+    setDescriptionSuggestions([]);
+  };
+
+  const fetchSubjectSuggestions = async () => {
+    if (!selectedDepartment) return;
+
+    setIsLoadingSubjectSuggestions(true);
+    try {
+      const suggestions = await getComplaintSubjectSuggestions(selectedDepartment.name, subject);
+      setSubjectSuggestions(suggestions);
+    } catch (error) {
+      console.error('Error fetching subject suggestions:', error);
+    } finally {
+      setIsLoadingSubjectSuggestions(false);
+    }
+  };
+
+  const fetchDescriptionSuggestions = async () => {
+    if (!selectedDepartment || !subject) return;
+
+    setIsLoadingDescriptionSuggestions(true);
+    try {
+      const suggestions = await getComplaintDescriptionSuggestions(
+        selectedDepartment.name,
+        subject,
+        description
+      );
+      setDescriptionSuggestions(suggestions);
+    } catch (error) {
+      console.error('Error fetching description suggestions:', error);
+    } finally {
+      setIsLoadingDescriptionSuggestions(false);
+    }
+  };
+
+  const handleSubjectSuggestionClick = (suggestion: string) => {
+    setSubject(suggestion);
+  };
+
+  const handleDescriptionSuggestionClick = (suggestion: string) => {
+    setDescription(suggestion);
   };
 
   const filteredComplaints = complaints.filter((complaint) => {
@@ -310,6 +379,15 @@ export function Complaints({ onNavigate, onToggleChatbot }: ComplaintsProps) {
                       onChange={(e) => setSubject(e.target.value)}
                       className="bg-white/50 border-gray-200/50 focus:bg-white"
                     />
+                    {/* AI Suggestions for Subject */}
+                    {selectedDepartment && (
+                      <SuggestionList
+                        suggestions={subjectSuggestions}
+                        onSelect={handleSubjectSuggestionClick}
+                        isLoading={isLoadingSubjectSuggestions}
+                        title="AI Suggestions"
+                      />
+                    )}
                   </div>
 
                   {/* Description */}
@@ -332,6 +410,15 @@ export function Complaints({ onNavigate, onToggleChatbot }: ComplaintsProps) {
                       rows={5}
                       className="bg-white/50 border-gray-200/50 focus:bg-white resize-none"
                     />
+                    {/* AI Suggestions for Description */}
+                    {selectedDepartment && subject.length > 5 && (
+                      <SuggestionList
+                        suggestions={descriptionSuggestions}
+                        onSelect={handleDescriptionSuggestionClick}
+                        isLoading={isLoadingDescriptionSuggestions}
+                        title="AI Suggestions"
+                      />
+                    )}
                   </div>
 
                   {/* Document Links */}
