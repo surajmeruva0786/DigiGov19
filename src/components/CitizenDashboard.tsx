@@ -32,6 +32,7 @@ import {
 import { NotificationsPanel } from './NotificationsPanel';
 import { SearchDropdown } from './SearchDropdown';
 import { searchAll, SearchResult } from '../lib/searchService';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface CitizenDashboardProps {
   onNavigate: (page: string) => void;
@@ -41,6 +42,7 @@ interface CitizenDashboardProps {
 }
 
 export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatbot }: CitizenDashboardProps) {
+  const { t } = useLanguage();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState([
     {
