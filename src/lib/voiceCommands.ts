@@ -110,6 +110,84 @@ export const navigationCommands: VoiceCommand[] = [
         examples: ['Go to health', 'Open health services'],
     },
     {
+        intent: 'NAVIGATE_CHILDREN',
+        patterns: [
+            /go to children/i,
+            /open children/i,
+            /show children/i,
+            /child (records?|services?)/i,
+            /manage children/i,
+        ],
+        action: async ({ navigate }) => {
+            navigate('/children');
+            return { success: true, message: 'Opening children services', shouldSpeak: true };
+        },
+        description: 'Navigate to children services',
+        examples: ['Go to children', 'Open children', 'Child records'],
+    },
+    {
+        intent: 'NAVIGATE_DIGITAL_ID',
+        patterns: [
+            /go to digital (id|identity)/i,
+            /open digital (id|identity)/i,
+            /show (my )?digital (id|identity)/i,
+            /(view|check) (my )?(id|identity) card/i,
+        ],
+        action: async ({ navigate }) => {
+            navigate('/digital-id');
+            return { success: true, message: 'Opening digital ID card', shouldSpeak: true };
+        },
+        description: 'Navigate to digital ID card',
+        examples: ['Go to digital ID', 'Show my digital identity', 'View ID card'],
+    },
+    {
+        intent: 'NAVIGATE_FEEDBACK',
+        patterns: [
+            /go to feedback/i,
+            /open feedback/i,
+            /give feedback/i,
+            /submit feedback/i,
+            /citizen feedback/i,
+        ],
+        action: async ({ navigate }) => {
+            navigate('/feedback');
+            return { success: true, message: 'Opening feedback form', shouldSpeak: true };
+        },
+        description: 'Navigate to feedback',
+        examples: ['Go to feedback', 'Give feedback', 'Submit feedback'],
+    },
+    {
+        intent: 'NAVIGATE_APPLICATIONS',
+        patterns: [
+            /go to (my )?applications?/i,
+            /open (my )?applications?/i,
+            /show (my )?applications?/i,
+            /scholarship applications?/i,
+            /apply for scholarship/i,
+        ],
+        action: async ({ navigate }) => {
+            navigate('/applications');
+            return { success: true, message: 'Opening applications', shouldSpeak: true };
+        },
+        description: 'Navigate to applications',
+        examples: ['Go to applications', 'Show my applications', 'Scholarship applications'],
+    },
+    {
+        intent: 'NAVIGATE_ANALYTICS',
+        patterns: [
+            /go to analytics/i,
+            /open analytics/i,
+            /show (my )?analytics/i,
+            /view analytics/i,
+        ],
+        action: async ({ navigate }) => {
+            navigate('/analytics');
+            return { success: true, message: 'Opening analytics', shouldSpeak: true };
+        },
+        description: 'Navigate to analytics',
+        examples: ['Go to analytics', 'Show my analytics'],
+    },
+    {
         intent: 'GO_BACK',
         patterns: [
             /go back/i,
