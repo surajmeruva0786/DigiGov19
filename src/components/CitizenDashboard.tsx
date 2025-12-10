@@ -30,6 +30,8 @@ import {
   SelectValue,
 } from './ui/select';
 import { NotificationsPanel } from './NotificationsPanel';
+import { SearchDropdown } from './SearchDropdown';
+import { searchAll, SearchResult } from '../lib/searchService';
 
 interface CitizenDashboardProps {
   onNavigate: (page: string) => void;
@@ -88,6 +90,13 @@ export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatb
     pendingComplaintsCount: 0,
     applicationsCount: 0,
   });
+
+  // Search states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchDebounceTimer, setSearchDebounceTimer] = useState<NodeJS.Timeout | null>(null);
 
   // Fetch notifications and stats from Firestore
   useEffect(() => {
@@ -168,6 +177,69 @@ export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatb
     }
   };
 
+  // Search handlers
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+
+    // Clear previous timer
+    if (searchDebounceTimer) {
+      clearTimeout(searchDebounceTimer);
+    }
+
+    // If query is empty, hide results
+    if (!value.trim()) {
+      setShowSearchResults(false);
+      setSearchResults([]);
+      return;
+    }
+
+    // Set new timer for debounced search
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      setShowSearchResults(true);
+      try {
+        const { getAuth } = await import('firebase/auth');
+        const auth = getAuth();
+        const userId = auth.currentUser?.uid;
+        const results = await searchAll(value, userId || undefined);
+        setSearchResults(results);
+      } catch (error) {
+        console.error('Error searching:', error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    setSearchDebounceTimer(timer);
+  };
+
+  const handleSearchResultClick = (result: SearchResult) => {
+    // Navigate based on result type
+    switch (result.type) {
+      case 'scheme':
+        onNavigate('schemes');
+        break;
+      case 'complaint':
+        onNavigate('complaints');
+        break;
+      case 'document':
+        onNavigate('documents');
+        break;
+      case 'application':
+        onNavigate('applications');
+        break;
+    }
+    // Clear search
+    setSearchQuery('');
+    setShowSearchResults(false);
+    setSearchResults([]);
+  };
+
+  const handleCloseSearch = () => {
+    setShowSearchResults(false);
+  };
   const unreadCount = notifications.filter(n => !n.read).length;
   const quickStats = [
     {
@@ -427,6 +499,9 @@ export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatb
                 <Input
                   placeholder="Search schemes, complaints, documents..."
                   className="pl-12 pr-12 h-14 text-lg bg-white/50 border-gray-200/50 focus:bg-white"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  onFocus={() => searchQuery && setShowSearchResults(true)}
                 />
                 <Button
                   size="icon"
@@ -435,6 +510,15 @@ export function CitizenDashboard({ onNavigate, userName, onLogout, onToggleChatb
                 >
                   <Mic className="w-5 h-5 text-blue-600" />
                 </Button>
+                {/* Search Results Dropdown */}
+                {showSearchResults && (
+                  <SearchDropdown
+                    results={searchResults}
+                    isLoading={isSearching}
+                    onResultClick={handleSearchResultClick}
+                    onClose={handleCloseSearch}
+                  />
+                )}
               </div>
               <div className="mt-4">
                 <Button
