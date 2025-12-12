@@ -80,6 +80,13 @@ export function getWelcomeMessage(): string {
 }
 
 export function getSuggestedQuestions(): string[] {
+    return [
+        "What is Ayushman Bharat scheme?",
+        "How do I apply for a PAN card?",
+        "What are the vaccination schedules for children?",
+        "How can I pay my electricity bill online?",
+        "What scholarships are available for students?",
+        "How do I file a complaint about government services?",
     ];
 }
 
