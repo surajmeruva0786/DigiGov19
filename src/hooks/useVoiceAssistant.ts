@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSpeechRecognition } from './useSpeechRecognition';
 import { speak, stopSpeaking } from '../lib/voiceSynthesis';
 import { executeCommand } from '../lib/voiceCommands';
