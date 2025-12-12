@@ -72,13 +72,13 @@ export function VoiceAssistantSidebar({ isOpen, onClose, state, actions }: Voice
                                 <div className="flex items-center gap-3">
                                     <motion.div
                                         className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg"
-                                        animate={status === 'listening-command' ? {
+                                        animate={status === 'listening' ? {
                                             scale: [1, 1.1, 1],
                                             rotate: [0, 5, -5, 0],
                                         } : {}}
                                         transition={{
                                             duration: 1.5,
-                                            repeat: status === 'listening-command' ? Infinity : 0,
+                                            repeat: status === 'listening' ? Infinity : 0,
                                             ease: 'easeInOut',
                                         }}
                                     >
@@ -88,11 +88,10 @@ export function VoiceAssistantSidebar({ isOpen, onClose, state, actions }: Voice
                                         <h2 className="text-xl font-semibold">Voice Assistant</h2>
                                         <p className="text-sm text-gray-500">
                                             {!isEnabled ? 'Disabled' :
-                                                status === 'listening-wake' ? 'Listening for "Hey DigiGov!"' :
-                                                    status === 'listening-command' ? 'Listening for command...' :
-                                                        status === 'processing' ? 'Processing...' :
-                                                            status === 'speaking' ? 'Speaking...' :
-                                                                'Ready'}
+                                                status === 'listening' ? 'Listening...' :
+                                                    status === 'processing' ? 'Processing...' :
+                                                        status === 'speaking' ? 'Speaking...' :
+                                                            'Ready'}
                                         </p>
                                     </div>
                                 </div>
@@ -143,7 +142,7 @@ export function VoiceAssistantSidebar({ isOpen, onClose, state, actions }: Voice
                         {/* Content */}
                         <div className="flex-1 overflow-y-auto p-6 space-y-4">
                             {/* Listening Animation */}
-                            {status === 'listening-command' && (
+                            {status === 'listening' && (
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -193,7 +192,7 @@ export function VoiceAssistantSidebar({ isOpen, onClose, state, actions }: Voice
                                         </div>
                                     ) : (
                                         <p className="text-gray-400 text-sm text-center">
-                                            Say "Hey DigiGov!" to start...
+                                            Click Start Listening to speak...
                                         </p>
                                     )}
                                 </div>
@@ -263,10 +262,10 @@ export function VoiceAssistantSidebar({ isOpen, onClose, state, actions }: Voice
                             <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-2xl p-4 border border-yellow-200">
                                 <h4 className="text-sm font-medium text-amber-900 mb-2">💡 Tips</h4>
                                 <ul className="space-y-1 text-xs text-amber-800">
-                                    <li>• Say "Hey DigiGov!" to activate</li>
+                                    <li>• Click "Start Listening" to activate</li>
                                     <li>• Speak clearly and at a normal pace</li>
                                     <li>• Wait for the beep before speaking</li>
-                                    <li>• You have 10 seconds to give a command</li>
+                                    <li>• Commands are processed automatically</li>
                                 </ul>
                             </div>
                         </div>

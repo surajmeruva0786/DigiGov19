@@ -80,12 +80,21 @@ export function getWelcomeMessage(): string {
 }
 
 export function getSuggestedQuestions(): string[] {
-    return [
-        "What is Ayushman Bharat scheme?",
-        "How do I apply for a PAN card?",
-        "What are the vaccination schedules for children?",
-        "How can I pay my electricity bill online?",
-        "What scholarships are available for students?",
-        "How do I file a complaint about government services?",
     ];
+}
+
+export async function translateText(text: string, targetLanguage: string = 'Hindi'): Promise<string> {
+    try {
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        const prompt = `Translate the following text to ${targetLanguage}. Return ONLY the translated text, no other words or explanations. maintain the tone and context.
+        
+        Text to translate: "${text}"`;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return response.text().trim();
+    } catch (error) {
+        console.error('Translation error:', error);
+        return text; // Return original text on error
+    }
 }
