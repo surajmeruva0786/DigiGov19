@@ -30,7 +30,7 @@ export const navigationCommands: VoiceCommand[] = [
             /take me to (the )?dashboard/i,
         ],
         action: async ({ navigate }) => {
-            navigate('/dashboard');
+            navigate('dashboard');
             return { success: true, message: 'Opening dashboard', shouldSpeak: true };
         },
         description: 'Navigate to dashboard',
@@ -44,7 +44,7 @@ export const navigationCommands: VoiceCommand[] = [
             /show (my )?documents?/i,
         ],
         action: async ({ navigate }) => {
-            navigate('/documents');
+            navigate('documents');
             return { success: true, message: 'Opening documents', shouldSpeak: true };
         },
         description: 'Navigate to documents',
@@ -59,7 +59,7 @@ export const navigationCommands: VoiceCommand[] = [
             /file (a )?complaint/i,
         ],
         action: async ({ navigate }) => {
-            navigate('/complaints');
+            navigate('complaints');
             return { success: true, message: 'Opening complaints', shouldSpeak: true };
         },
         description: 'Navigate to complaints',
@@ -74,7 +74,7 @@ export const navigationCommands: VoiceCommand[] = [
             /bill payment/i,
         ],
         action: async ({ navigate }) => {
-            navigate('/bill-payments');
+            navigate('bill-payments');
             return { success: true, message: 'Opening bill payments', shouldSpeak: true };
         },
         description: 'Navigate to bill payments',
@@ -89,7 +89,7 @@ export const navigationCommands: VoiceCommand[] = [
             /apply for schemes?/i,
         ],
         action: async ({ navigate }) => {
-            navigate('/schemes');
+            navigate('schemes');
             return { success: true, message: 'Opening government schemes', shouldSpeak: true };
         },
         description: 'Navigate to schemes',
@@ -103,7 +103,7 @@ export const navigationCommands: VoiceCommand[] = [
             /health (services?|care)/i,
         ],
         action: async ({ navigate }) => {
-            navigate('/health');
+            navigate('health');
             return { success: true, message: 'Opening health services', shouldSpeak: true };
         },
         description: 'Navigate to health services',
@@ -119,7 +119,7 @@ export const navigationCommands: VoiceCommand[] = [
             /manage children/i,
         ],
         action: async ({ navigate }) => {
-            navigate('/children');
+            navigate('children');
             return { success: true, message: 'Opening children services', shouldSpeak: true };
         },
         description: 'Navigate to children services',
@@ -134,7 +134,7 @@ export const navigationCommands: VoiceCommand[] = [
             /(view|check) (my )?(id|identity) card/i,
         ],
         action: async ({ navigate }) => {
-            navigate('/digital-id');
+            navigate('digital-id');
             return { success: true, message: 'Opening digital ID card', shouldSpeak: true };
         },
         description: 'Navigate to digital ID card',
@@ -150,7 +150,7 @@ export const navigationCommands: VoiceCommand[] = [
             /citizen feedback/i,
         ],
         action: async ({ navigate }) => {
-            navigate('/feedback');
+            navigate('feedback');
             return { success: true, message: 'Opening feedback form', shouldSpeak: true };
         },
         description: 'Navigate to feedback',
@@ -166,7 +166,7 @@ export const navigationCommands: VoiceCommand[] = [
             /apply for scholarship/i,
         ],
         action: async ({ navigate }) => {
-            navigate('/applications');
+            navigate('applications');
             return { success: true, message: 'Opening applications', shouldSpeak: true };
         },
         description: 'Navigate to applications',
@@ -181,7 +181,7 @@ export const navigationCommands: VoiceCommand[] = [
             /view analytics/i,
         ],
         action: async ({ navigate }) => {
-            navigate('/analytics');
+            navigate('analytics');
             return { success: true, message: 'Opening analytics', shouldSpeak: true };
         },
         description: 'Navigate to analytics',
