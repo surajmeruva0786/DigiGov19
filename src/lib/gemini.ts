@@ -105,3 +105,42 @@ export async function translateText(text: string, targetLanguage: string = 'Hind
         return text; // Return original text on error
     }
 }
+
+export async function translateBatch(texts: string[], targetLanguage: string = 'Hindi'): Promise<string[]> {
+    if (texts.length === 0) return [];
+
+    try {
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        // Create a JSON object with numbered keys to preserve order and structure
+        const textPayload = texts.reduce((acc, text, index) => {
+            acc[index] = text;
+            return acc;
+        }, {} as Record<number, string>);
+
+        const prompt = `You are a translator. Translate the following JSON object values to ${targetLanguage}.
+        Return ONLY valid JSON where keys match the input and values are translated.
+        Do not add Markdown formatting code blocks. Return raw JSON.
+        Maintain tone and context.
+        
+        Input: ${JSON.stringify(textPayload)}`;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        let responseText = response.text().trim();
+
+        // Clean up markdown code blocks if present
+        if (responseText.startsWith('```json')) {
+            responseText = responseText.replace(/^```json/, '').replace(/```$/, '');
+        } else if (responseText.startsWith('```')) {
+            responseText = responseText.replace(/^```/, '').replace(/```$/, '');
+        }
+
+        const translatedMap = JSON.parse(responseText);
+
+        // Map back to array
+        return texts.map((_, index) => translatedMap[index] || texts[index]);
+    } catch (error) {
+        console.error('Batch translation error:', error);
+        return texts; // Return original text on error
+    }
+}
